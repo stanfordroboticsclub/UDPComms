@@ -2,20 +2,22 @@ import socket
 import struct
 
 
-# class Publisher:
-#     def __init__(self, typ, multicast, port
+class Publisher:
+    def __init__(self, typ, multicast_ip, port):
+        self.struct = struct.Struct(typ)
 
-def send(multicast_group, message):
+        self.multicast_group = (multicast_ip, port)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.settimeout(0.2)
+        self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack('b', 1))
 
-    # Set a timeout so the socket does not block indefinitely when trying
-    # to receive data.
-    sock.settimeout(0.2)
-    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack('b', 1))
+    def send(self, *msg):
+        data = self.struct.pack(*msg)
+        self.sock.sendto(data, self.multicast_group)
 
-    sent = sock.sendto(message, multicast_group)
-    sock.close()
+    def __del__(self):
+        sock.close()
 
 
 def recv(ip):
