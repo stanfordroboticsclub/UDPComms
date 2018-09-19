@@ -9,6 +9,7 @@ import struct
 from collections import namedtuple
 
 class Publisher:
+    my_ip = "10.0.0.11"
     def __init__(self, fields, typ, multicast_ip, port):
         """ Create a Publisher Object
 
@@ -29,6 +30,7 @@ class Publisher:
 
         self.sock.settimeout(0.2)
         self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack('b', 1))
+        self.sock.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.my_ip))
 
         self.sock.connect(self.multicast_group)
 
