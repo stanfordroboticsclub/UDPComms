@@ -23,6 +23,9 @@ class Publisher:
         data = self.struct.pack(*msg)
         self.sock.send(data)
 
+    def debug_send_type(self):
+        self.sock.send(self.struct.format + "," + ",".join(self.tuple._fields) )
+
     def __del__(self):
         self.sock.close()
 
@@ -51,6 +54,18 @@ class Subscriber:
         data, address = self.sock.recvfrom(1024)
         print 'received %s bytes from %s' % (len(data), address)
         return self.tuple(*self.struct.unpack(data))
+
+    def debug_recv_type(self):
+        data, address = self.sock.recvfrom(1024)
+
+        fields = data.split(",")
+        print fields
+        format_ = fields.pop(0)
+
+        assert format_ == self.struct.format
+        assert tuple(fields) == self.tuple._fields
+
+        return True
 
     def __del__(self):
         self.sock.close()
