@@ -1,5 +1,6 @@
 import socket
 import struct
+from collections import namedtuple
 
 class Publisher:
     def __init__(self, typ, multicast_ip, port):
@@ -11,9 +12,11 @@ class Publisher:
         self.sock.settimeout(0.2)
         self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack('b', 1))
 
+        self.sock.connect(self.multicast_group)
+
     def send(self, *msg):
         data = self.struct.pack(*msg)
-        self.sock.sendto(data, self.multicast_group)
+        self.sock.send(data)
 
     def __del__(self):
         self.sock.close()
@@ -48,5 +51,6 @@ params = ('ff', '224.3.29.71', 10000)
 
 if __name__ == "__main__":
     msg = 'very important data'
-    ip = ('224.3.29.71', 10000)
-    send(ip, msg)
+
+    a = Publisher(*params)
+    a.send(ip, msg)
