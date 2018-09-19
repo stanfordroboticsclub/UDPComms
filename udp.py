@@ -3,8 +3,9 @@ import struct
 from collections import namedtuple
 
 class Publisher:
-    def __init__(self, typ, multicast_ip, port):
+    def __init__(self, fields, typ, multicast_ip, port):
         self.struct = struct.Struct(typ)
+        self.tuple = namedtuple("msg", fields)
 
         self.multicast_group = (multicast_ip, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -14,7 +15,8 @@ class Publisher:
 
         self.sock.connect(self.multicast_group)
 
-    def send(self, *msg):
+    def send(self, *arg, **kwarg):
+        msg = self.tuple(*arg, **kwarg)
         data = self.struct.pack(*msg)
         self.sock.send(data)
 
@@ -23,8 +25,9 @@ class Publisher:
 
 
 class Subscriber:
-    def __init__(self, typ, multicast_ip, port):
+    def __init__(self, fields, typ, multicast_ip, port):
         self.struct = struct.Struct(typ)
+        self.tuple = namedtuple("msg", fields)
 
         self.multicast_group = multicast_ip
         self.server_address = ('', port)
@@ -41,13 +44,13 @@ class Subscriber:
     def recv(self):
         data, address = self.sock.recvfrom(1024)
         print 'received %s bytes from %s' % (len(data), address)
-        return self.struct.unpack(data)
+        return self.tuple(*self.struct.unpack(data))
 
     def __del__(self):
         self.sock.close()
 
 
-params = ('ff', '224.3.29.71', 10000)
+params = ("left right", 'ff', '224.3.29.71', 10000)
 
 if __name__ == "__main__":
     msg = 'very important data'
