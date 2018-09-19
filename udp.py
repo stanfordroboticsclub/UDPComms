@@ -7,6 +7,9 @@ class Publisher:
         self.struct = struct.Struct(typ)
         self.tuple = namedtuple("msg", fields)
 
+        assert len(self.tuple._fields) == \
+               len(self.struct.unpack( "0"*self.struct.size ))
+
         self.multicast_group = (multicast_ip, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -28,6 +31,9 @@ class Subscriber:
     def __init__(self, fields, typ, multicast_ip, port):
         self.struct = struct.Struct(typ)
         self.tuple = namedtuple("msg", fields)
+
+        assert len(self.tuple._fields) == \
+               len(self.struct.unpack( "0"*self.struct.size ))
 
         self.multicast_group = multicast_ip
         self.server_address = ('', port)
