@@ -1,9 +1,23 @@
+
+"""
+This is a simple library to enable communication between different processes (potentially on different machines) over a network using UDP multicasting. It's goals a simplicity and easy of understanding and reliability
+
+mikadam@stanford.edu
+"""
 import socket
 import struct
 from collections import namedtuple
 
 class Publisher:
     def __init__(self, fields, typ, multicast_ip, port):
+        """ Create a Publisher Object
+
+        Arguments:
+            fields       -- tuple of human readable names of fields in the message
+            typ          -- a struct format string that described the low level message layout
+            multicast_ip -- the multicast group to publish the messages to
+            port         -- the port to publish the messages on
+        """
         self.struct = struct.Struct(typ)
         self.tuple = namedtuple("msg", fields)
 
@@ -19,11 +33,13 @@ class Publisher:
         self.sock.connect(self.multicast_group)
 
     def send(self, *arg, **kwarg):
+        """ Publish a message. The arguemnts are the message fields """
         msg = self.tuple(*arg, **kwarg)
         data = self.struct.pack(*msg)
         self.sock.send(data)
 
     def debug_send_type(self):
+        """ Send the message type to be verified """
         self.sock.send(self.struct.format + "," + ",".join(self.tuple._fields) )
 
     def __del__(self):
@@ -32,6 +48,14 @@ class Publisher:
 
 class Subscriber:
     def __init__(self, fields, typ, multicast_ip, port):
+        """ Create a Subscriber Object
+
+        Arguments:
+            fields       -- tuple of human readable names of fields in the message
+            typ          -- a struct format string that described the low level message layout
+            multicast_ip -- the multicast group to subscriber to messages on
+            port         -- the port to listen to messages on
+        """
         self.struct = struct.Struct(typ)
         self.tuple = namedtuple("msg", fields)
 
@@ -51,11 +75,13 @@ class Subscriber:
         self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
     def recv(self):
+        """ Recive a message. Returns a namedtuple matching the messages fieldnames """
         data, address = self.sock.recvfrom(1024)
         print 'received %s bytes from %s' % (len(data), address)
         return self.tuple(*self.struct.unpack(data))
 
     def debug_recv_type(self):
+        """ Verify the message type matches the publisher """
         data, address = self.sock.recvfrom(1024)
 
         fields = data.split(",")
