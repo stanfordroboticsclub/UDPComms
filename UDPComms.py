@@ -9,8 +9,8 @@ import struct
 from collections import namedtuple
 
 class Publisher:
-    my_ip = "10.0.0.11"
-    def __init__(self, fields, typ, multicast_ip, port):
+    broadcast_ip = "10.0.0.255"
+    def __init__(self, fields, typ, port):
         """ Create a Publisher Object
 
         Arguments:
@@ -25,14 +25,14 @@ class Publisher:
         assert len(self.tuple._fields) == \
                len(self.struct.unpack( "0"*self.struct.size ))
 
-        self.multicast_group = (multicast_ip, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.sock.settimeout(0.2)
-        self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack('b', 1))
-        self.sock.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.my_ip))
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-        self.sock.connect(self.multicast_group)
+        self.sock.settimeout(0.2)
+        self.sock.connect((self.broadcast_ip, port))
+
 
     def send(self, *arg, **kwarg):
         """ Publish a message. The arguemnts are the message fields """
@@ -49,7 +49,7 @@ class Publisher:
 
 
 class Subscriber:
-    def __init__(self, fields, typ, multicast_ip, port):
+    def __init__(self, fields, typ, port):
         """ Create a Subscriber Object
 
         Arguments:
@@ -64,17 +64,14 @@ class Subscriber:
         assert len(self.tuple._fields) == \
                len(self.struct.unpack( "0"*self.struct.size ))
 
-        self.multicast_group = multicast_ip
-        self.server_address = ('', port)
 
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind(self.server_address)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        if hasattr(socket, "SO_REUSEPORT"):
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
-        # Tell the operating system to add the socket to the multicast group
-        # on all interfaces.
-        group = socket.inet_aton(self.multicast_group)
-        mreq = struct.pack('4sL', group, socket.INADDR_ANY)
-        self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        self.sock.bind(("", port))
 
     def recv(self):
         """ Recive a message. Returns a namedtuple matching the messages fieldnames """
@@ -99,7 +96,7 @@ class Subscriber:
         self.sock.close()
 
 
-params = ("left right", 'ff', '224.3.29.71', 10000)
+params = ("left right", 'ff', 10000)
 
 if __name__ == "__main__":
     msg = 'very important data'
