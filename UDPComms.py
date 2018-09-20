@@ -1,6 +1,6 @@
 
 """
-This is a simple library to enable communication between different processes (potentially on different machines) over a network using UDP multicasting. It's goals a simplicity and easy of understanding and reliability
+This is a simple library to enable communication between different processes (potentially on different machines) over a network using UDP. It's goals a simplicity and easy of understanding and reliability
 
 mikadam@stanford.edu
 """
@@ -35,14 +35,16 @@ class Publisher:
 
 
     def send(self, *arg, **kwarg):
-        """ Publish a message. The arguemnts are the message fields """
+        """ Publish a message. The arguments are the message fields """
         msg = self.tuple(*arg, **kwarg)
         data = self.struct.pack(*msg)
         self.sock.send(data)
 
     def debug_send_type(self):
         """ Send the message type to be verified """
-        self.sock.send(self.struct.format + "," + ",".join(self.tuple._fields) )
+        data_to_send = self.struct.format + "," + ",".join(self.tuple._fields)
+        assert len(data_to_send) < 2048
+        self.sock.send(data_to_send)
 
     def __del__(self):
         self.sock.close()
@@ -75,13 +77,13 @@ class Subscriber:
 
     def recv(self):
         """ Recive a message. Returns a namedtuple matching the messages fieldnames """
-        data, address = self.sock.recvfrom(1024)
+        data, address = self.sock.recvfrom(self.struct.size)
         print 'received %s bytes from %s' % (len(data), address)
         return self.tuple(*self.struct.unpack(data))
 
     def debug_recv_type(self):
         """ Verify the message type matches the publisher """
-        data, address = self.sock.recvfrom(1024)
+        data, address = self.sock.recvfrom(2048)
 
         fields = data.split(",")
         print fields
