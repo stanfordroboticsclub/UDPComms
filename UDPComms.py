@@ -16,7 +16,6 @@ class Publisher:
         Arguments:
             fields       -- tuple of human readable names of fields in the message
             typ          -- a struct format string that described the low level message layout
-            multicast_ip -- the multicast group to publish the messages to
             port         -- the port to publish the messages on
         """
         self.struct = struct.Struct(typ)
@@ -57,7 +56,6 @@ class Subscriber:
         Arguments:
             fields       -- tuple of human readable names of fields in the message
             typ          -- a struct format string that described the low level message layout
-            multicast_ip -- the multicast group to subscriber to messages on
             port         -- the port to listen to messages on
         """
         self.struct = struct.Struct(typ)
