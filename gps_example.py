@@ -22,6 +22,8 @@ while True:
             pub.send(0 ,report.lat,report.lon,report.alt,
                          report.epx, report.epy, report.epv)
 
+    except AttributeError:
+		pass
     except KeyError:
 		pass
     except KeyboardInterrupt:
