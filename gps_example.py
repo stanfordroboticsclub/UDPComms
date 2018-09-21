@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import gps
 from UDPComms import Publisher
 
@@ -7,7 +9,7 @@ session = gps.gps("localhost", "2947")
 session.stream(gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
 
 fields = "time lat lon alt error_lat error_lon error_alt"
-format_ = "ifffi"
+format_ = "i3f3f"
 port = 8851
 pub = Publisher(fields, format_, port)
 

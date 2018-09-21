@@ -1,0 +1,11 @@
+[Unit]
+Description=UDP Publisher for GPS data
+
+[Service]
+ExecStart=/home/pi/UDP-Comms/gps_example.py
+StandardOutput=null
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=gps_udp.service
