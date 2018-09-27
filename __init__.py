@@ -1,2 +1,3 @@
-from UDPComms import Publisher, Subscriber
-__all__ = ["UDPComms"]
+from .UDPComms import Publisher
+from .UDPComms import Subscriber
+__all__ = ["Publisher", "Subscriber"]
