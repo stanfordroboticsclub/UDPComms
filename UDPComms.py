@@ -22,7 +22,7 @@ class Publisher:
         self.tuple = namedtuple("msg", fields)
 
         assert len(self.tuple._fields) == \
-               len(self.struct.unpack( "0"*self.struct.size ))
+               len(self.struct.unpack( b"0"*self.struct.size ))
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -62,7 +62,7 @@ class Subscriber:
         self.tuple = namedtuple("msg", fields)
 
         assert len(self.tuple._fields) == \
-               len(self.struct.unpack( "0"*self.struct.size ))
+               len(self.struct.unpack( b"0"*self.struct.size ))
 
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
@@ -76,7 +76,7 @@ class Subscriber:
     def recv(self):
         """ Recive a message. Returns a namedtuple matching the messages fieldnames """
         data, address = self.sock.recvfrom(self.struct.size)
-        print 'received %s bytes from %s' % (len(data), address)
+        print('received %s bytes from %s' % (len(data), address))
         return self.tuple(*self.struct.unpack(data))
 
     def debug_recv_type(self):
@@ -84,7 +84,7 @@ class Subscriber:
         data, address = self.sock.recvfrom(2048)
 
         fields = data.split(",")
-        print fields
+        print(fields)
         format_ = fields.pop(0)
 
         assert format_ == self.struct.format
