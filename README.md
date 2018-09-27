@@ -1,4 +1,4 @@
-# UDP-Comms
+# UDPComms
 
 This is a simple library to enable communication between different processes (potentially on different machines) over a network using UDP. It's goals a simplicity and easy of understanding and reliability.
 
@@ -42,6 +42,6 @@ The port the messages will be sent/listed to on. When chosing a port make sure t
 
 ### Changing the broadcast address
 
-Currently the broadcast address is set to "10.0.0.255" which will send messages to all nodes on the rover subnet (10.0.0.X). To change this address change `Publisher.broadcast_ip`
+Currently the broadcast address is set to "10.0.0.255" which will send messages to all nodes on the rover subnet (10.0.0.X). To change this address change `Publisher.broadcast_ip`. Sometime this is necessary if you are trying to test some code without a connection to the rover subnet (ie no external hardware). To over come this set `Publisher.broadcast_ip = "<broadcast>"` 
 
 
