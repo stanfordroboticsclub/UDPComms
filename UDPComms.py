@@ -76,7 +76,7 @@ class Subscriber:
     def recv(self):
         """ Recive a message. Returns a namedtuple matching the messages fieldnames """
         data, address = self.sock.recvfrom(self.struct.size)
-        print('received %s bytes from %s' % (len(data), address))
+        #print('received %s bytes from %s' % (len(data), address))
         return self.tuple(*self.struct.unpack(data))
 
     def debug_recv_type(self):
