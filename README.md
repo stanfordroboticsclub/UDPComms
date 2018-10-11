@@ -5,14 +5,14 @@ This is a simple library to enable communication between different processes (po
 Currently it works in python but it should be relatively simple to extend it to C to run on embedded devices like arduino
 
 
-### To Send
+### To Send Messages
 ```
 >>> from UDPComms import Publisher
 >>> a = Publisher("name age height mass", "20sIff", 5500)
 >>> a.send("Bob", 20, 180.5, 70.1)
 ```
 
-### To Receive
+### To Receive Messages
 ```
 >>> from UDPComms import Subscriber
 >>> a = Subscriber("name age height mass", "20sIff", 5500)
@@ -37,8 +37,17 @@ Tuple of human readable names of fields in the message. In addition to recvied m
 - `typ`
 A struct format string that described the low level message layout. For example the character `'f'` indicated a float while `'20s'` indicates a string of max length 20. You can find more about the format string syntax [here](https://docs.python.org/2/library/struct.html#format-characters)
 - `port`
-The port the messages will be sent/listed to on. When chosing a port make sure there isn't any conflicts by checking a document to be deternimed (likly a google sheet)
+The port the messages will be sent/listed to on. When chosing a port make sure there isn't any conflicts by checking the `UDP Ports` sheet of the `CS Comms System` google doc which you can find in our google drive
 
+
+### To Install 
+
+```
+$git clone https://github.com/stanfordroboticsclub/UDPComms.git
+$cd UDPComms
+$sudo python setup.py install
+$sudo python3 setup.py install
+```
 
 ### Changing the broadcast address
 
