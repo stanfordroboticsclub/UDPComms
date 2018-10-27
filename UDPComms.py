@@ -50,7 +50,7 @@ class Publisher:
 
 
 class Subscriber:
-    def __init__(self, fields, typ, port):
+    def __init__(self, fields, typ, port, timeout=0.2):
         """ Create a Subscriber Object
 
         Arguments:
@@ -71,6 +71,7 @@ class Subscriber:
         if hasattr(socket, "SO_REUSEPORT"):
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
+        self.sock.settimeout(timeout)
         self.sock.bind(("", port))
 
     def recv(self):
