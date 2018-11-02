@@ -8,6 +8,8 @@ import socket
 import struct
 from collections import namedtuple
 
+timeout = socket.timeout
+
 class Publisher:
     broadcast_ip = "10.0.0.255"
     def __init__(self, fields, typ, port):
