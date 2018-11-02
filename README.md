@@ -45,9 +45,11 @@ The port the messages will be sent/listed to on. When chosing a port make sure t
 ```
 $git clone https://github.com/stanfordroboticsclub/UDPComms.git
 $cd UDPComms
-$sudo python setup.py install
-$sudo python3 setup.py install
+$sudo python setup.py clean --all install
+$sudo python3 setup.py clean --all install
 ```
+
+The `clean --all` removes the build directory automaticly which makes reinstalling new versions possbile with the same command.
 
 ### Changing the broadcast address
 
