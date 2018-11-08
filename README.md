@@ -37,19 +37,18 @@ Tuple of human readable names of fields in the message. In addition to recvied m
 - `typ`
 A struct format string that described the low level message layout. For example the character `'f'` indicated a float while `'20s'` indicates a string of max length 20. You can find more about the format string syntax [here](https://docs.python.org/2/library/struct.html#format-characters)
 - `port`
-The port the messages will be sent/listed to on. When chosing a port make sure there isn't any conflicts by checking the `UDP Ports` sheet of the `CS Comms System` google doc which you can find in our google drive
+The port the messages will be sent/listed to on. When chosing a port make sure there isn't any conflicts by checking the `UDP Ports` sheet of the [CS Comms System](https://docs.google.com/spreadsheets/d/1pqduUwYa1_sWiObJDrvCCz4Al3pl588ytE4u-Dwa6Pw/edit?usp=sharing) document
+- `timeout`
+(Subscriber only) If the `recv()` method don't get a message in `timeout` seconds it throws a `UDPComms.timeout` exception
 
 
 ### To Install 
 
 ```
 $git clone https://github.com/stanfordroboticsclub/UDPComms.git
-$cd UDPComms
-$sudo python setup.py clean --all install
-$sudo python3 setup.py clean --all install
+$sudo ./UDPComms/install.sh
 ```
 
-The `clean --all` removes the build directory automaticly which makes reinstalling new versions possbile with the same command.
 
 ### Changing the broadcast address
 
