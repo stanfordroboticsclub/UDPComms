@@ -4,9 +4,14 @@ This is a simple library to enable communication between different processes (po
 
 mikadam@stanford.edu
 """
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import socket
 import struct
 from collections import namedtuple
+from time import monotonic
 
 timeout = socket.timeout
 
@@ -60,8 +65,16 @@ class Subscriber:
             typ          -- a struct format string that described the low level message layout
             port         -- the port to listen to messages on
         """
+        self.fields = fields
+        self.typ = typ
+        self.port = port
+        self.timeout = timeout
+
         self.struct = struct.Struct(typ)
         self.tuple = namedtuple("msg", fields)
+
+        self.last_message = None
+        self.last_time = float('-inf')
 
         assert len(self.tuple._fields) == \
                len(self.struct.unpack( b"0"*self.struct.size ))
@@ -80,7 +93,23 @@ class Subscriber:
         """ Recive a message. Returns a namedtuple matching the messages fieldnames """
         data, address = self.sock.recvfrom(self.struct.size)
         #print('received %s bytes from %s' % (len(data), address))
-        return self.tuple(*self.struct.unpack(data))
+        self.last_message = self.tuple(*self.struct.unpack(data))
+        self.last_time = monotonic()
+        return self.last_message
+
+    def get(self):
+        try:
+            self.sock.settimeout(0)
+            self.recv()
+        except socket.error:
+            pass
+        finally:
+            self.sock.settimeout(self.timeout)
+
+        if (monotonic() - self.last_time) < self.timeout:
+            return self.last_message
+        else:
+            raise socket.timeout
 
     def debug_recv_type(self):
         """ Verify the message type matches the publisher """
