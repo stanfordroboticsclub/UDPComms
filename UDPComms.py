@@ -11,7 +11,12 @@ from __future__ import print_function
 import socket
 import struct
 from collections import namedtuple
-from time import monotonic
+
+from sys import version_info
+if version_info[0] < 3:
+    from time import time as monotonic
+else:
+    from time import monotonic
 
 timeout = socket.timeout
 
@@ -64,6 +69,7 @@ class Subscriber:
             fields       -- tuple of human readable names of fields in the message
             typ          -- a struct format string that described the low level message layout
             port         -- the port to listen to messages on
+            timeout      -- how long to wait before a message is considered out of date
         """
         self.fields = fields
         self.typ = typ
@@ -90,7 +96,8 @@ class Subscriber:
         self.sock.bind(("", port))
 
     def recv(self):
-        """ Recive a message. Returns a namedtuple matching the messages fieldnames """
+        """ Receive a message. Returns a namedtuple matching the messages fieldnames 
+            If no message is received before timeout it raises a UDPComms.timeout exception"""
         data, address = self.sock.recvfrom(self.struct.size)
         #print('received %s bytes from %s' % (len(data), address))
         self.last_message = self.tuple(*self.struct.unpack(data))
@@ -98,9 +105,12 @@ class Subscriber:
         return self.last_message
 
     def get(self):
+        """ Returns the latest message it can without blocking. If the latest massage is 
+            older then timeout seconds it raises a UDPComms.timeout exception"""
         try:
             self.sock.settimeout(0)
-            self.recv()
+            while True:
+                self.recv()
         except socket.error:
             pass
         finally:
