@@ -30,6 +30,11 @@ msg(name='Bob\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0
 ```
 Note that string fields maintain the null characters from their C representation. THye can be removed using `str.rstrip('\0')`
 
+### Get Method
+The prefered way of accessing messages is the `Subsciber.get()` method. It is guarantied to be nonblocking so it can be used in places wihtout messing with timing. It checks for any new messages and returns the newest one. If the newest message is older then `timeout` seconds it raises the `UDPComms.timeout` exception.
+
+TODO: give examples
+
 ### Arguments 
 
 - `fields`
