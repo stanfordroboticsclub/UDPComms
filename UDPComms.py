@@ -116,10 +116,13 @@ class Subscriber:
         finally:
             self.sock.settimeout(self.timeout)
 
-        if (monotonic() - self.last_time) < self.timeout:
+        current_time = monotonic()
+        if (current_time - self.last_time) < self.timeout:
             return self.last_message
         else:
-            raise socket.timeout
+            raise socket.timeout("timeout=" + str(self.timeout) + \
+                                 ", last message time=" + str(self.last_time) + \
+                                 ", current time=" + str(current_time))
 
     def debug_recv_type(self):
         """ Verify the message type matches the publisher """
