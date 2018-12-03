@@ -28,10 +28,14 @@ Currently it works in python but it should be relatively simple to extend it to 
 >>> message
 msg(name='Bob\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00', age=20, height=180.5, mass=70.0999984741211)
 ```
-Note that string fields maintain the null characters from their C representation. THye can be removed using `str.rstrip('\0')`
+Note that string fields maintain the null characters from their C representation. They can be removed using `str.rstrip('\0')`
 
 ### Get Method
-The prefered way of accessing messages is the `Subsciber.get()` method. It is guarantied to be nonblocking so it can be used in places wihtout messing with timing. It checks for any new messages and returns the newest one. If the newest message is older then `timeout` seconds it raises the `UDPComms.timeout` exception.
+The preferred way of accessing messages is the `Subsciber.get()` method. It is guarantied to be nonblocking so it can be used in places without messing with timing. It checks for any new messages and returns the newest one.
+
+If the newest message is older then `timeout` seconds it raises the `UDPComms.timeout` exception. This is an important safety feature! Make sure to catch the timeout using `try: ... except UDPComms.timeout: ...` and put the robot in a safe configuration (e.g. turn off motors)
+
+Note that if you call `.get` immediately after creating a subscriber it is possible its hasn't received any messages yet and it will timeout. In general it is better to have a short timeout and gracefully catch timeouts then to have long timeouts
 
 TODO: give examples
 
