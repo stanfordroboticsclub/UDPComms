@@ -78,6 +78,7 @@ class Subscriber:
 
         self.struct = struct.Struct(typ)
         self.tuple = namedtuple("msg", fields)
+        self.str_coding = str(c for c in typ if c in "sm")
 
         self.last_message = None
         self.last_time = float('-inf')
@@ -95,12 +96,31 @@ class Subscriber:
         self.sock.settimeout(timeout)
         self.sock.bind(("", port))
 
+    def parse_message(self, data):
+        if self.str_coding = "":
+            return self.tuple(*self.struct.unpack(data))
+        else:
+            out = []
+            i = 0
+            for elem in self.struct.unpack(data):
+                if type(elem) == bytes:
+                    if self.str_coding[i] == 's':
+                        out.append(elem.rstrip(b'\0')
+                    else:
+                        unpacker = msgpack.Unpacker()
+                        unpacker.feed(elem)
+                        out.append(unpacker.unpack())
+                    i+=1
+                else:
+                    out.append(elem)
+            return self.tuple(*out)
+
     def recv(self):
         """ Receive a message. Returns a namedtuple matching the messages fieldnames 
             If no message is received before timeout it raises a UDPComms.timeout exception"""
         data, address = self.sock.recvfrom(self.struct.size)
         #print('received %s bytes from %s' % (len(data), address))
-        self.last_message = self.tuple(*self.struct.unpack(data))
+        self.last_message = self.parse_message(data)
         self.last_time = monotonic()
         return self.last_message
 
