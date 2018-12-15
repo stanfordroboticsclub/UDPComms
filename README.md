@@ -49,18 +49,15 @@ A struct format string that described the low level message layout. For example 
 The port the messages will be sent/listed to on. When chosing a port make sure there isn't any conflicts by checking the `UDP Ports` sheet of the [CS Comms System](https://docs.google.com/spreadsheets/d/1pqduUwYa1_sWiObJDrvCCz4Al3pl588ytE4u-Dwa6Pw/edit?usp=sharing) document
 - `timeout`
 (Subscriber only) If the `recv()` method don't get a message in `timeout` seconds it throws a `UDPComms.timeout` exception
+- `local`
+(Publisher only) This system will only work if you are connected to the rover subnet (10.0.0.X). If you want to develop with no external hardware (eg raspberry pi) connected set this to True to send packets to localhost instead.
 
 
 ### To Install 
 
 ```
 $git clone https://github.com/stanfordroboticsclub/UDPComms.git
-$sudo ./UDPComms/install.sh
+$sudo bash UDPComms/install.sh
 ```
-
-
-### Changing the broadcast address
-
-Currently the broadcast address is set to "10.0.0.255" which will send messages to all nodes on the rover subnet (10.0.0.X). To change this address change `Publisher.broadcast_ip`. Sometime this is necessary if you are trying to test some code without a connection to the rover subnet (ie no external hardware). To over come this set `Publisher.broadcast_ip = "<broadcast>"` 
 
 
