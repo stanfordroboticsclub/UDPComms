@@ -21,15 +21,19 @@ else:
 timeout = socket.timeout
 
 class Publisher:
-    broadcast_ip = "10.0.0.255"
-    def __init__(self, fields, typ, port):
+    def __init__(self, fields, typ, port, local = False):
         """ Create a Publisher Object
 
         Arguments:
             fields       -- tuple of human readable names of fields in the message
             typ          -- a struct format string that described the low level message layout
             port         -- the port to publish the messages on
+            local        -- if True publisher will only publish to only this computer but it will 
+                            work even if the computer isn't connected to a rover network. Useful for
+                            development
         """
+        self.broadcast_ip = "10.0.0.255"
+
         self.struct = struct.Struct(typ)
         self.tuple = namedtuple("msg", fields)
 
@@ -38,11 +42,15 @@ class Publisher:
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        if(not local):
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            self.broadcast_ip = "127.0.0.1"
 
         self.sock.settimeout(0.2)
         self.sock.connect((self.broadcast_ip, port))
+
+        self.port = port
+        self.local = local
 
 
     def send(self, *arg, **kwarg):
