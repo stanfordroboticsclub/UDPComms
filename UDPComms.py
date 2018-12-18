@@ -22,7 +22,7 @@ else:
 
 timeout = socket.timeout
 
-MAX_SIZE = 102400
+MAX_SIZE = 65507
 
 class Publisher:
     def __init__(self, port, local = False):
