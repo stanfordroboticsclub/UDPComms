@@ -29,8 +29,6 @@ class Publisher:
         """ Create a Publisher Object
 
         Arguments:
-            fields       -- tuple of human readable names of fields in the message
-            typ          -- a struct format string that described the low level message layout
             port         -- the port to publish the messages on
             local        -- if True publisher will only publish to only this computer but it will 
                             work even if the computer isn't connected to a rover network. Useful for
@@ -38,10 +36,10 @@ class Publisher:
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.broadcast_ip = "10.0.0.255"
+        self.broadcast_ip = "127.0.0.1"
         if(not local):
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            self.broadcast_ip = "127.0.0.1"
+            self.broadcast_ip = "10.0.0.255"
 
         self.sock.settimeout(0.2)
         self.sock.connect((self.broadcast_ip, port))
@@ -52,7 +50,7 @@ class Publisher:
     def send(self, *arg, **kwarg):
         """ Publish a message. The arguments are the message fields """
         msg = msgpack.dumps(*arg, **kwarg)
-        assert( len(msg) < MAX_SIZE, "Encoded message too big!" )
+        assert len(msg) < MAX_SIZE, "Encoded message too big!"
         self.sock.send(msg)
 
     def __del__(self):
@@ -99,6 +97,7 @@ class Subscriber:
             self.sock.settimeout(0)
             while True:
                 self.last_data, address = self.sock.recvfrom(self.max_size)
+                self.last_time = monotonic()
         except socket.error:
             pass
         finally:
