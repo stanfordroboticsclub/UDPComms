@@ -32,7 +32,6 @@ class Publisher:
                             work even if the computer isn't connected to a rover network. Useful for
                             development
         """
-        self.broadcast_ip = "10.0.0.255"
 
         self.struct = struct.Struct(typ)
         self.tuple = namedtuple("msg", fields)
@@ -42,9 +41,10 @@ class Publisher:
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+        self.broadcast_ip = "127.0.0.1"
         if(not local):
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            self.broadcast_ip = "127.0.0.1"
+            self.broadcast_ip = "10.0.0.255"
 
         self.sock.settimeout(0.2)
         self.sock.connect((self.broadcast_ip, port))
