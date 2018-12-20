@@ -4,6 +4,7 @@ import sys
 import argparse
 import json
 import time
+import select
 
 import UDPComms
 
@@ -13,7 +14,6 @@ def peek_func(port):
     while 1:
         try:
             data = sub.recv()
-            print("raw", data)
             print( json.dumps(data) )
         except UDPComms.timeout:
             exit()
@@ -23,14 +23,16 @@ def poke_func(port, rate):
     data = None
 
     while 1:
-        line = sys.stdin.readline()
-        if line!="":
-            data = line.rstrip('\n')
+        time.sleep( rate/1000 )
+
+        if select.select([sys.stdin], [], [], 0)[0]:
+            line = sys.stdin.readline()
+            if line.rstrip():
+                data = line.rstrip()
+                continue
 
         if data != None:
             pub.send( json.loads(data) )
-            print( data )
-            time.sleep( rate/1000 )
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
