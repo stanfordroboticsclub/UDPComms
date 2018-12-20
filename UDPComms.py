@@ -47,9 +47,9 @@ class Publisher:
         self.port = port
         self.local = local
 
-    def send(self, *arg, **kwarg):
+    def send(self, obj):
         """ Publish a message. The arguments are the message fields """
-        msg = msgpack.dumps(*arg, **kwarg)
+        msg = msgpack.dumps(obj, use_bin_type=True)
         assert len(msg) < MAX_SIZE, "Encoded message too big!"
         self.sock.send(msg)
 
@@ -88,7 +88,7 @@ class Subscriber:
 
         self.last_data, address = self.sock.recvfrom(self.max_size)
         self.last_time = monotonic()
-        return msgpack.loads(self.last_data)
+        return msgpack.loads(self.last_data, encoding='utf-8')
 
     def get(self):
         """ Returns the latest message it can without blocking. If the latest massage is 
