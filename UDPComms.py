@@ -105,7 +105,7 @@ class Subscriber:
 
         current_time = monotonic()
         if (current_time - self.last_time) < self.timeout:
-            return msgpack.loads(self.last_data)
+            return msgpack.loads(self.last_data, encoding='utf-8')
         else:
             raise socket.timeout("timeout=" + str(self.timeout) + \
                                  ", last message time=" + str(self.last_time) + \
