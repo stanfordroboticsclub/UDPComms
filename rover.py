@@ -7,6 +7,7 @@ import time
 import select
 
 import UDPComms
+import msgpack
 
 
 def peek_func(port):
@@ -14,7 +15,9 @@ def peek_func(port):
     while 1:
         try:
             data = sub.recv()
-            print( json.dumps(data) )
+            # ugly but works for now
+            no_bytes = msgpack.loads(msgpack.dumps(data), encoding='utf-8')
+            print( json.dumps(no_bytes) )
         except UDPComms.timeout:
             exit()
 
