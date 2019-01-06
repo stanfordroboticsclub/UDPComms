@@ -26,17 +26,22 @@ def poke_func(port, rate):
     data = None
 
     while 1:
-        time.sleep( rate/1000 )
-
         if select.select([sys.stdin], [], [], 0)[0]:
             line = sys.stdin.readline()
+            # detailed behaviour
+            # reading from file: -ignores empty lines -repeats last line forever
+            # reading from terminal: -repeats last command
             if line.rstrip():
                 data = line.rstrip()
-                # what behaviour do we want on a empty line?
-                # rebroadcast or ignore?
+            elif len(line) == 0:
+                # exit() #uncomment to quit on end of file
+                pass
+            else:
+                continue
 
         if data != None:
             pub.send( json.loads(data) )
+            time.sleep( rate/1000 )
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
