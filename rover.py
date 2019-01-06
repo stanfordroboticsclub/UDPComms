@@ -32,7 +32,8 @@ def poke_func(port, rate):
             line = sys.stdin.readline()
             if line.rstrip():
                 data = line.rstrip()
-                continue
+                # what behaviour do we want on a empty line?
+                # rebroadcast or ignore?
 
         if data != None:
             pub.send( json.loads(data) )
@@ -49,8 +50,6 @@ if __name__ == '__main__':
     poke.add_argument('rate', help="how often to republish (ms)", type=float)
 
     args = parser.parse_args()
-
-    print(args)
 
     if args.subparser == 'peek':
         peek_func(args.port)
