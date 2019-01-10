@@ -22,7 +22,7 @@ def peek_func(port):
             exit()
 
 def poke_func(port, rate):
-    pub = UDPComms.Publisher(port, local = True)
+    pub = UDPComms.Publisher(port)
     data = None
 
     while 1:
