@@ -82,12 +82,17 @@ if __name__ == '__main__':
         status.add_argument('unit', help="The unit whose status we want to know", 
                                                         nargs='?', default=None)
 
+    connect = subparsers.add_parser('connect')
+    connect.add_argument('host', help="Which device to log into")
+
     args = parser.parse_args()
 
     if args.subparser == 'peek':
         peek_func(args.port)
     elif args.subparser == 'poke':
         poke_func(args.port, args.rate)
+    elif args.subparser == 'connect':
+        call_func("ssh pi@"+args.host+".local")
 
     elif args.subparser in commands:
         if args.unit is None:
