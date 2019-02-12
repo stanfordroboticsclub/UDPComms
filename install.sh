@@ -7,6 +7,9 @@ cd $FOLDER
 yes | sudo pip install msgpack
 yes | sudo pip3 install msgpack
 
+# used for rover command
+yes | sudo pip3 install pexpect
+
 #The `clean --all` removes the build directory automaticly which makes reinstalling new versions possbile with the same command.
 python setup.py clean --all install
 python3 setup.py clean --all install
