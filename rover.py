@@ -45,14 +45,21 @@ def poke_func(port, rate):
 
 def call_func(command):
     child = pexpect.spawn(command)
-    try:
-        child.expect('password:', timeout=20)
-    except pexpect.EOF:
-        print("Can't connect to device")
-        exit()
-    except pexpect.TIMEOUT:
-        print("Interaction with device failed")
-        exit()
+
+    i = 1
+    while i == 1:
+        try:
+            i = child.expect(['password:', 
+                         'Are you sure you want to continue connecting'], timeout=20)
+        except pexpect.EOF:
+            print("Can't connect to device")
+            exit()
+        except pexpect.TIMEOUT:
+            print("Interaction with device failed")
+            exit()
+
+        if i == 1:
+            child.sendline('yes')
 
     child.sendline('raspberry')
     child.interact()
