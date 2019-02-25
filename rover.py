@@ -43,25 +43,26 @@ def poke_func(port, rate):
             pub.send( json.loads(data) )
             time.sleep( rate/1000 )
 
-def call_func(command):
+def call_func(command, ssh = True):
     child = pexpect.spawn(command)
 
-    i = 1
-    while i == 1:
-        try:
-            i = child.expect(['password:', 
-                         'Are you sure you want to continue connecting'], timeout=20)
-        except pexpect.EOF:
-            print("Can't connect to device")
-            exit()
-        except pexpect.TIMEOUT:
-            print("Interaction with device failed")
-            exit()
+    if ssh:
+        i = 1
+        while i == 1:
+            try:
+                i = child.expect(['password:', 
+                             'Are you sure you want to continue connecting'], timeout=20)
+            except pexpect.EOF:
+                print("Can't connect to device")
+                exit()
+            except pexpect.TIMEOUT:
+                print("Interaction with device failed")
+                exit()
 
-        if i == 1:
-            child.sendline('yes')
+            if i == 1:
+                child.sendline('yes')
+        child.sendline('raspberry')
 
-    child.sendline('raspberry')
     child.interact()
 
 if __name__ == '__main__':
@@ -98,20 +99,28 @@ if __name__ == '__main__':
         if args.unit is None:
             args.unit = args.host
 
+        print(args.host)
+        if args.host == 'local':
+            prefix = ""
+            ssh = False
+        else:
+            prefix = "ssh pi@"+args.host+".local "
+            ssh = True
+
         if args.subparser == 'status':
-            call_func("ssh pi@"+args.host+".local"+" sudo systemctl status "+args.unit)
+            call_func(prefix + "sudo systemctl status "+args.unit, ssh)
         elif args.subparser == 'log':
-            call_func("ssh pi@"+args.host+".local"+" sudo journalctl -f -u "+args.unit)
+            call_func(prefix + "sudo journalctl -f -u "+args.unit, ssh)
         elif args.subparser == 'start':
-            call_func("ssh pi@"+args.host+".local"+" sudo systemctl start "+args.unit)
+            call_func(prefix + "sudo systemctl start "+args.unit, ssh)
         elif args.subparser == 'stop':
-            call_func("ssh pi@"+args.host+".local"+" sudo systemctl stop "+args.unit)
+            call_func(prefix + "sudo systemctl stop "+args.unit, ssh)
         elif args.subparser == 'restart':
-            call_func("ssh pi@"+args.host+".local"+" sudo systemctl restart "+args.unit)
+            call_func(prefix + "sudo systemctl restart "+args.unit, ssh)
         elif args.subparser == 'enable':
-            call_func("ssh pi@"+args.host+".local"+" sudo systemctl enable "+args.unit)
+            call_func(prefix + "sudo systemctl enable "+args.unit, ssh)
         elif args.subparser == 'disable':
-            call_func("ssh pi@"+args.host+".local"+" sudo systemctl disable "+args.unit)
+            call_func(prefix + "sudo systemctl disable "+args.unit, ssh)
     else:
         parser.print_help()
 
