@@ -62,6 +62,9 @@ def call_func(command, ssh = True):
             if i == 1:
                 child.sendline('yes')
         child.sendline('raspberry')
+    else:
+        child.expect('robot:')
+        child.sendline('hello')
 
     child.interact()
 
@@ -99,7 +102,6 @@ if __name__ == '__main__':
         if args.unit is None:
             args.unit = args.host
 
-        print(args.host)
         if args.host == 'local':
             prefix = ""
             ssh = False
