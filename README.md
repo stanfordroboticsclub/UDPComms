@@ -54,8 +54,13 @@ If the `recv()` method don't get a message in `timeout` seconds it throws a `UDP
 
 The library also comes with the `rover` command that can be used to interact with the messages manually.
 
-TODO docs
 
+| Command | Descripion |
+|---------|------------|
+| `rover peek port` | print messages sent on port `port` |
+| `rover poke port rate` | send messages to `port` once every `rate` milliseconds. Type message in json format and press return |
+
+There are more commands used for starting and stoping services described in [this repo](https://github.com/stanfordroboticsclub/RPI-Setup/blob/master/README.md)
 
 ### To Install 
 
