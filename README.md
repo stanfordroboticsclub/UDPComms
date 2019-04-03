@@ -29,7 +29,7 @@ Currently it works in python but it should be relatively simple to extend it to 
 This new verison of the library automatically determines the type of the message and trasmits it along with it, so the subscribers can decode it correctly. While faster to prototype with its easy to shoot yourself in the foot if types change unexpectedly.
 
 ### Get Method
-The preferred way of accessing messages is the `Subsciber.get()` method. It is guarantied to be nonblocking so it can be used in places without messing with timing. It checks for any new messages and returns the newest one.
+The preferred way of accessing messages is the `Subsciber.get()` method (as opposed to the `recv()` method). It is guaranteed to be nonblocking so it can be used in places without messing with timing. It checks for any new messages and returns the newest one.
 
 If the newest message is older then `timeout` seconds it raises the `UDPComms.timeout` exception. **This is an important safety feature!** Make sure to catch the timeout using `try: ... except UDPComms.timeout: ...` and put the robot in a safe configuration (e.g. turn off motors, when the joystick stop sending messages)
 
@@ -77,4 +77,14 @@ $git pull
 $sudo bash install.sh
 ```
 
+### Developing without hardware
 
+Because this library expects you to be connected to the rover network you won't be able to send messages between two programs on your computer without any other hardware connected. You can get around this by forcing your (unused) ethernet interface to get an ip on the rover network without anything being connected to it. On my computer you can do this using this command:
+
+`sudo ifconfig en1 10.0.0.52 netmask 255.255.255.0`
+
+Note that the exact command depends which interface on your computer is unused and what ip you want.
+
+### Known issues:
+
+- Macs have issues sending large messages. They are fine receiving them. I think it is related to [this issue](https://github.com/BanTheRewind/Cinder-Asio/issues/9). I wonder does it work on Linux by chance (as the packets happen to be in order) but so far we didn't have issues.
