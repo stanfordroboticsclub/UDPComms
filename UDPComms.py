@@ -88,7 +88,7 @@ class Subscriber:
 
         self.last_data, address = self.sock.recvfrom(self.max_size)
         self.last_time = monotonic()
-        return msgpack.loads(self.last_data, encoding='utf-8')
+        return msgpack.loads(self.last_data, raw=False)
 
     def get(self):
         """ Returns the latest message it can without blocking. If the latest massage is 
@@ -105,7 +105,7 @@ class Subscriber:
 
         current_time = monotonic()
         if (current_time - self.last_time) < self.timeout:
-            return msgpack.loads(self.last_data, encoding='utf-8')
+            return msgpack.loads(self.last_data, raw=False)
         else:
             raise socket.timeout("timeout=" + str(self.timeout) + \
                                  ", last message time=" + str(self.last_time) + \
