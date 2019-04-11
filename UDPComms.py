@@ -25,27 +25,22 @@ timeout = socket.timeout
 MAX_SIZE = 65507
 
 class Publisher:
-    def __init__(self, port, local = False):
+    def __init__(self, port):
         """ Create a Publisher Object
 
         Arguments:
             port         -- the port to publish the messages on
-            local        -- if True publisher will only publish to only this computer but it will 
-                            work even if the computer isn't connected to a rover network. Useful for
-                            development
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
         self.broadcast_ip = "127.0.0.1"
-        if(not local):
-            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            self.broadcast_ip = "10.0.0.255"
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.broadcast_ip = "10.0.0.255"
 
         self.sock.settimeout(0.2)
         self.sock.connect((self.broadcast_ip, port))
 
         self.port = port
-        self.local = local
 
     def send(self, obj):
         """ Publish a message. The arguments are the message fields """
