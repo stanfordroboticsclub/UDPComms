@@ -15,7 +15,9 @@ from collections import namedtuple
 import msgpack
 
 from sys import version_info
-if version_info[0] < 3:
+
+USING_PYTHON_2 = (version_info[0] < 3)
+if USING_PYTHON_2:
     from time import time as monotonic
 else:
     from time import monotonic
@@ -44,7 +46,7 @@ class Publisher:
 
     def send(self, obj):
         """ Publish a message. The arguments are the message fields """
-        msg = msgpack.dumps(obj, use_bin_type=True)
+        msg = msgpack.dumps(obj, use_bin_type=False)
         assert len(msg) < MAX_SIZE, "Encoded message too big!"
         self.sock.send(msg)
 
@@ -83,7 +85,7 @@ class Subscriber:
 
         self.last_data, address = self.sock.recvfrom(self.max_size)
         self.last_time = monotonic()
-        return msgpack.loads(self.last_data, raw=False)
+        return msgpack.loads(self.last_data, raw=USING_PYTHON_2)
 
     def get(self):
         """ Returns the latest message it can without blocking. If the latest massage is 
@@ -100,7 +102,7 @@ class Subscriber:
 
         current_time = monotonic()
         if (current_time - self.last_time) < self.timeout:
-            return msgpack.loads(self.last_data, raw=False)
+            return msgpack.loads(self.last_data, raw=USING_PYTHON_2)
         else:
             raise socket.timeout("timeout=" + str(self.timeout) + \
                                  ", last message time=" + str(self.last_time) + \
