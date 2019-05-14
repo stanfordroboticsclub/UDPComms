@@ -51,7 +51,8 @@ def call_func(command, ssh = True):
         while i == 1:
             try:
                 i = child.expect(['password:', 
-                             'Are you sure you want to continue connecting'], timeout=20)
+                             'Are you sure you want to continue connecting', 
+                                  'Welcome'], timeout=20)
             except pexpect.EOF:
                 print("Can't connect to device")
                 exit()
@@ -61,7 +62,8 @@ def call_func(command, ssh = True):
 
             if i == 1:
                 child.sendline('yes')
-        child.sendline('raspberry')
+        if i == 0:
+            child.sendline('raspberry')
     else:
         child.expect('robot:')
         child.sendline('hello')
