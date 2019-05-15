@@ -65,8 +65,11 @@ def call_func(command, ssh = True):
         if i == 0:
             child.sendline('raspberry')
     else:
-        child.expect('robot:')
-        child.sendline('hello')
+        try:
+            child.expect('robot:', timeout=1)
+            child.sendline('hello')
+        except pexpect.TIMEOUT:
+            pass
 
     child.interact()
 
@@ -80,6 +83,8 @@ if __name__ == '__main__':
     poke = subparsers.add_parser("poke")
     poke.add_argument('port', help="UDP port to publish the data to", type=int)
     poke.add_argument('rate', help="how often to republish (ms)", type=float)
+
+    peek = subparsers.add_parser("discover")
 
     commands = ['status', 'log', 'start', 'stop', 'restart', 'enable', 'disable']
     for command in commands:
@@ -99,6 +104,8 @@ if __name__ == '__main__':
         poke_func(args.port, args.rate)
     elif args.subparser == 'connect':
         call_func("ssh pi@"+args.host+".local")
+    elif args.subparser == 'discover':
+        call_func("nmap -sP 10.0.0.0/24", ssh=False)
 
     elif args.subparser in commands:
         if args.unit is None:
