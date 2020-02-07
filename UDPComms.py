@@ -121,7 +121,7 @@ class Subscriber:
                 self.last_data, address = self.sock.recvfrom(self.max_size)
                 self.last_time = monotonic()
                 msg = msgpack.loads(self.last_data, raw=USING_PYTHON_2)
-                self.msg_bufer.append(msg)
+                msg_bufer.append(msg)
         except socket.error:
             pass
         finally:
