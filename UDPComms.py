@@ -45,7 +45,7 @@ class Publisher:
         self.port = port
 
     def send(self, obj):
-        """ Publish a message. The arguments are the message fields """
+        """ Publish a message. The obj can be any nesting of standard python types """
         msg = msgpack.dumps(obj, use_bin_type=False)
         assert len(msg) < MAX_SIZE, "Encoded message too big!"
         self.sock.send(msg)
@@ -80,10 +80,14 @@ class Subscriber:
         self.sock.bind(("", port))
 
     def recv(self):
-        """ Receive a message. Returns a namedtuple matching the messages fieldnames 
-            If no message is received before timeout it raises a UDPComms.timeout exception"""
+        """ Receive a single message from the socket buffer. It blocks for up to timeout seconds.
+        If no message is received before timeout it raises a UDPComms.timeout exception"""
 
-        self.last_data, address = self.sock.recvfrom(self.max_size)
+        try:
+            self.last_data, address = self.sock.recvfrom(self.max_size)
+        except BlockingIOError:
+            raise socket.timeout("no messages in buffer and called with timeout = 0")
+
         self.last_time = monotonic()
         return msgpack.loads(self.last_data, raw=USING_PYTHON_2)
 
@@ -107,6 +111,23 @@ class Subscriber:
             raise socket.timeout("timeout=" + str(self.timeout) + \
                                  ", last message time=" + str(self.last_time) + \
                                  ", current time=" + str(current_time))
+
+    def get_list(self):
+        """ Returns list of messages, in the order they were received"""
+        msg_bufer = []
+        try:
+            self.sock.settimeout(0)
+            while True:
+                self.last_data, address = self.sock.recvfrom(self.max_size)
+                self.last_time = monotonic()
+                msg = msgpack.loads(self.last_data, raw=USING_PYTHON_2)
+                self.msg_bufer.append(msg)
+        except socket.error:
+            pass
+        finally:
+            self.sock.settimeout(self.timeout)
+
+        return msg_bufer
 
     def __del__(self):
         self.sock.close()
