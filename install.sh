@@ -4,8 +4,9 @@
 FOLDER=$(python -c "import os; print(os.path.dirname(os.path.realpath('$0')))")
 cd $FOLDER
 
-yes | sudo pip install msgpack
-yes | sudo pip3 install msgpack
+#forces 0.6.0 until I update to new msgpack version
+yes | sudo pip install -Iv msgpack==0.6.0
+yes | sudo pip3 install -Iv msgpack==0.6.0
 
 # used for rover command
 yes | sudo pip3 install pexpect
