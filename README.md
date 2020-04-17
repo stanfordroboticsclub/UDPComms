@@ -65,9 +65,7 @@ Although UDPComms isn't ideal for commands that need to be processed in order (a
 
 ### Publisher Arguments 
 - `port`
-The port the messages will be sent on. When chosing a port make sure there isn't any conflicts by checking the `UDP Ports` sheet of the [CS Comms System](https://docs.google.com/spreadsheets/d/1pqduUwYa1_sWiObJDrvCCz4Al3pl588ytE4u-Dwa6Pw/edit?usp=sharing) document
-- `local`
-This system will only work if you are connected to the rover subnet (10.0.0.X). If you want to develop with no external hardware (eg raspberry pi) connected set this to True to send packets to localhost instead. _Depreciated:_ see `Developing without hardware` section
+The port the messages will be sent on. If you are part of Stanford Student Robotics make sure there isn't any port conflicts by checking the `UDP Ports` sheet of the [CS Comms System](https://docs.google.com/spreadsheets/d/1pqduUwYa1_sWiObJDrvCCz4Al3pl588ytE4u-Dwa6Pw/edit?usp=sharing) document. If you are not I recommend keep track of your port numbers somewhere. It's possible that in the future UDPComms will have a system of naming (with a string) as opposed to numbering publishers. 
 
 ### Subscriber Arguments 
 
