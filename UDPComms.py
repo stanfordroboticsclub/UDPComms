@@ -26,6 +26,10 @@ timeout = socket.timeout
 
 MAX_SIZE = 65507
 
+##TODO:
+# Nicer configuration
+# Test on ubuntu and debian
+# Documentation (targets, and security disclaimer)
 
 class Target(Enum):
     LOCALHOST = auto()
