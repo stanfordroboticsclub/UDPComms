@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import socket
 import struct
-from collections import namedtuple
+from enum import Enum, auto
 
 import msgpack
 
@@ -26,21 +26,43 @@ timeout = socket.timeout
 
 MAX_SIZE = 65507
 
+
+class Target(Enum):
+    LOCALHOST = auto()
+    BROADCAST = auto()
+    MULTICAST = auto()
+
 class Publisher:
-    def __init__(self, port):
+    broadcast_ip = "10.0.0.255"
+    muticast_ip = '224.1.1.1'
+    def __init__(self, port, target = Target.BROADCAST):
         """ Create a Publisher Object
 
         Arguments:
             port         -- the port to publish the messages on
+            target       -- where to publish the message
         """
+        print("magic")
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.broadcast_ip = "127.0.0.1"
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.broadcast_ip = "10.0.0.255"
+        if target == Target.BROADCAST:
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+            self.ip = self.broadcast_ip
+
+        elif target == Target.LOCALHOST:
+            self.ip = "127.0.0.1"
+
+        elif target == Target.MULTICAST:
+            # raise NotImplementedError
+            self.ip = self.muticast_ip
+            self.sock.setsockopt(socket.IPPROTO_IP,
+                                 socket.IP_MULTICAST_TTL,
+                                 struct.pack('b', 1))
+        else:
+            raise ValueError
 
         self.sock.settimeout(0.2)
-        self.sock.connect((self.broadcast_ip, port))
+        self.sock.connect((self.ip, port))
 
         self.port = port
 
@@ -55,6 +77,7 @@ class Publisher:
 
 
 class Subscriber:
+    muticast_ip = '224.1.1.1'
     def __init__(self, port, timeout=0.2):
         """ Create a Subscriber Object
 
@@ -75,6 +98,9 @@ class Subscriber:
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if hasattr(socket, "SO_REUSEPORT"):
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+
+        mreq = struct.pack("4sl", socket.inet_aton(self.muticast_ip), socket.INADDR_ANY)
+        self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
         self.sock.settimeout(timeout)
         self.sock.bind(("", port))
