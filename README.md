@@ -6,6 +6,8 @@ Currently it works in python 2 and 3 but it should be relatively simple to exten
 
 This new verison of the library automatically determines the type of the message and trasmits it along with it, so the subscribers can decode it correctly. While faster to prototype with then systems with explicit type declaration (such as ROS) its easy to shoot yourself in the foot if types are mismatched between publisher and subscriber.
 
+## Usage
+
 ### To Send Messages
 ```
 >>> from UDPComms import Publisher
@@ -74,19 +76,44 @@ The port the subscriber will be listen on.
 - `timeout`
 If the `recv()` method don't get a message in `timeout` seconds it throws a `UDPComms.timeout` exception
 
-### Rover
+## Configuring targets
 
-The library also comes with the `rover` command that can be used to interact with the messages manually.
+By default the messages are sent using a broadcast on the `10.0.0.X` subnet
+
+```
+>>> from UDPComms import Publisher, Target
+>>> Publisher.target = Target.MULTICAST
+>>> a = Publisher(5500)
+>>> a.send("testing")
+```
+
+TODO
+
+```
+>>> from UDPComms import Publisher, Target
+>>> Publisher.target = Target.LOCALHOST
+>>> a = Publisher(5500)
+>>> a.send("testing")
+```
+
+### Developing without hardware
 
 
-| Command | Descripion |
-|---------|------------|
-| `rover peek port` | print messages sent on port `port` |
-| `rover poke port rate` | send messages to `port` once every `rate` milliseconds. Type message in json format and press return |
 
-There are more commands used for starting and stoping services described in [this repo](https://github.com/stanfordroboticsclub/RPI-Setup/blob/master/README.md)
+### Developing without hardware
 
-### To Install 
+Because this library expects you to be connected to the robot () network you won't be able to send messages between two programs on your computer without any other hardware connected. You can get around this by forcing your (unused) ethernet interface to get an ip on the rover network without anything being connected to it. On my computer you can do this using this command:
+
+`sudo ifconfig en1 10.0.0.52 netmask 255.255.255.0`
+
+Note that the exact command depends which interface on your computer is unused and what ip you want. So only use this if you know what you are doing.
+
+If you have internet access a slightly cleaner way to do it is to setup [RemoteVPN](https://github.com/stanfordroboticsclub/RemoteVPN) on your development computer and simply connect to a development network (given if you are the only computer there)
+
+
+
+
+## Installation
 
 ```
 $git clone https://github.com/stanfordroboticsclub/UDPComms.git
@@ -101,15 +128,22 @@ $git pull
 $sudo bash install.sh
 ```
 
-### Developing without hardware
 
-Because this library expects you to be connected to the robot (`10.0.0.X`) network you won't be able to send messages between two programs on your computer without any other hardware connected. You can get around this by forcing your (unused) ethernet interface to get an ip on the rover network without anything being connected to it. On my computer you can do this using this command:
 
-`sudo ifconfig en1 10.0.0.52 netmask 255.255.255.0`
+## Extras
 
-Note that the exact command depends which interface on your computer is unused and what ip you want. So only use this if you know what you are doing.
+### Rover
 
-If you have internet access a slightly cleaner way to do it is to setup [RemoteVPN](https://github.com/stanfordroboticsclub/RemoteVPN) on your development computer and simply connect to a development network (given if you are the only computer there)
+The library also comes with the `rover` command that can be used to interact with the messages manually.
+
+| Command | Descripion |
+|---------|------------|
+| `rover peek port` | print messages sent on port `port` |
+| `rover poke port rate` | send messages to `port` once every `rate` milliseconds. Type message in json format and press return |
+
+There are more commands used for starting and stoping services described in [this repo](https://github.com/stanfordroboticsclub/RPI-Setup/blob/master/README.md)
+
+
 
 ### Known issues:
 
