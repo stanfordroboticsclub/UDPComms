@@ -26,6 +26,9 @@ timeout = socket.timeout
 
 MAX_SIZE = 65507
 
+DEFAULT_BROADCAST = "10.0.0.255"
+DEFAULT_MULTICAST = "239.255.20.22"
+
 ##TODO:
 # Nicer configuration
 # Test on ubuntu and debian
@@ -37,26 +40,25 @@ class Target(Enum):
     MULTICAST = auto()
 
 class Publisher:
-    broadcast_ip = "10.0.0.255"
-    muticast_ip = '224.1.1.1'
-    def __init__(self, port, target = Target.BROADCAST):
+    broadcast_ip = DEFAULT_BROADCAST
+    muticast_ip  = DEFAULT_MULTICAST
+    target       = Target.BROADCAST
+    def __init__(self, port):
         """ Create a Publisher Object
 
         Arguments:
             port         -- the port to publish the messages on
-            target       -- where to publish the message
         """
-        print("magic")
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        if target == Target.BROADCAST:
+        if self.target == Target.BROADCAST:
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             self.ip = self.broadcast_ip
 
-        elif target == Target.LOCALHOST:
+        elif self.target == Target.LOCALHOST:
             self.ip = "127.0.0.1"
 
-        elif target == Target.MULTICAST:
+        elif self.target == Target.MULTICAST:
             # raise NotImplementedError
             self.ip = self.muticast_ip
             self.sock.setsockopt(socket.IPPROTO_IP,
@@ -81,7 +83,8 @@ class Publisher:
 
 
 class Subscriber:
-    muticast_ip = '224.1.1.1'
+    muticast_ip  = DEFAULT_MULTICAST
+    broadcast_ip = DEFAULT_BROADCAST
     def __init__(self, port, timeout=0.2):
         """ Create a Subscriber Object
 
