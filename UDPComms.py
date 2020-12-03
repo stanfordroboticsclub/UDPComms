@@ -26,8 +26,10 @@ timeout = socket.timeout
 
 MAX_SIZE = 65507
 
+DEFAULT_IP = "10.0.0.255"
+
 class Publisher:
-    def __init__(self, port):
+    def __init__(self, port, ip = DEFAULT_IP):
         """ Create a Publisher Object
 
         Arguments:
@@ -35,9 +37,8 @@ class Publisher:
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-        self.broadcast_ip = "127.0.0.1"
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.broadcast_ip = "10.0.0.255"
+        self.broadcast_ip = ip
 
         self.sock.settimeout(0.2)
         self.sock.connect((self.broadcast_ip, port))
