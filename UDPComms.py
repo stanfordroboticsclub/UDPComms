@@ -34,6 +34,7 @@ class Publisher:
 
         Arguments:
             port         -- the port to publish the messages on
+            ip           -- the ip to send the messages to
         """
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
