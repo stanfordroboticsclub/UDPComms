@@ -68,6 +68,7 @@ Although UDPComms isn't ideal for commands that need to be processed in order (a
 ### Publisher Arguments 
 - `port`
 The port the messages will be sent on. If you are part of Stanford Student Robotics make sure there isn't any port conflicts by checking the `UDP Ports` sheet of the [CS Comms System](https://docs.google.com/spreadsheets/d/1pqduUwYa1_sWiObJDrvCCz4Al3pl588ytE4u-Dwa6Pw/edit?usp=sharing) document. If you are not I recommend keep track of your port numbers somewhere. It's possible that in the future UDPComms will have a system of naming (with a string) as opposed to numbering publishers. 
+- `ip` By default UDPComms sends to the `10.0.0.X` subnet, but can be changed to a different ip using this argument. Set to localhost (`127.0.0.1`) for development on the same computer. 
 
 ### Subscriber Arguments 
 
