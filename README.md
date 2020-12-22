@@ -1,10 +1,12 @@
 # UDPComms
 
-This is a simple library to enable communication between different processes (potentially on different machines) over a network using UDP. It's goals a simplicity and easy of understanding and reliability. It works for devices on the `10.0.0.X` subnet although this can easiliy be changed.
+This is a simple library to enable communication between different processes (potentially on different machines) over a network using UDP. It's goals a simplicity and easy of understanding. It can send messages to processes running on the same device or to proceses on other devices on the same network (configured using scopes).
 
 Currently it works in python 2 and 3 but it should be relatively simple to extend it to other languages such as C (to run on embeded devices) or Julia (to interface with faster solvers).
 
-This new verison of the library automatically determines the type of the message and trasmits it along with it, so the subscribers can decode it correctly. While faster to prototype with then systems with explicit type declaration (such as ROS) its easy to shoot yourself in the foot if types are mismatched between publisher and subscriber.
+The library automatically determines the type of the message and trasmits it along with it, so the subscribers can decode it correctly. While faster to prototype with then systems with explicit type declaration (such as ROS) its easy to shoot yourself in the foot if types are mismatched between publisher and subscriber.
+
+Note that this library doesn't provide any message security. Unless you are using `Scope.Local()` on both ends, not only can anyone on your network evesdrop on messages they can also spoof messages very easily.
 
 ## Usage
 
@@ -17,8 +19,9 @@ This new verison of the library automatically determines the type of the message
 
 ### To Receive Messages
 
-#### recv Method
+**TLDR** - you probably want the `get()` method
 
+#### recv Method
 
 Note: before using the `Subsciber.recv()` method read about the `Subsciber.get()` and understand the difference between them. The `Subsciber.recv()` method will pull a message from the socket buffer and it won't necessary be the most recent message. If you are calling it too slowly and there is a lot of messages you will be getting old messages. The `Subsciber.recv()` can also block for up to `timeout` seconds messing up timing.
 
@@ -64,11 +67,12 @@ Although UDPComms isn't ideal for commands that need to be processed in order (a
 >>> for message in messages:
 >>>     print("got", message)
 ```
+-
 
 ### Publisher Arguments 
 - `port`
-The port the messages will be sent on. If you are part of Stanford Student Robotics make sure there isn't any port conflicts by checking the `UDP Ports` sheet of the [CS Comms System](https://docs.google.com/spreadsheets/d/1pqduUwYa1_sWiObJDrvCCz4Al3pl588ytE4u-Dwa6Pw/edit?usp=sharing) document. If you are not I recommend keep track of your port numbers somewhere. It's possible that in the future UDPComms will have a system of naming (with a string) as opposed to numbering publishers. 
-- `ip` By default UDPComms sends to the `10.0.0.X` subnet, but can be changed to a different ip using this argument. Set to localhost (`127.0.0.1`) for development on the same computer. 
+The port the messages will be sent on. I recommend keep track of your port numbers somewhere. It's possible that in the future UDPComms will have a system of naming (with a string) as opposed to numbering publishers. 
+- `scope` Leave this as the defualt (`Scope.Local()`) to send messages to only this computer. Set to `Scope.Multicast()` to send to others on the network. See Scopes explained for details
 
 ### Subscriber Arguments 
 
@@ -76,42 +80,29 @@ The port the messages will be sent on. If you are part of Stanford Student Robot
 The port the subscriber will be listen on. 
 - `timeout`
 If the `recv()` method don't get a message in `timeout` seconds it throws a `UDPComms.timeout` exception
-
-## Configuring targets
-
-By default the messages are sent using a broadcast on the `10.0.0.X` subnet
-
-```
->>> from UDPComms import Publisher, Target
->>> Publisher.target = Target.MULTICAST
->>> a = Publisher(5500)
->>> a.send("testing")
-```
-
-TODO
-
-```
->>> from UDPComms import Publisher, Target
->>> Publisher.target = Target.LOCALHOST
->>> a = Publisher(5500)
->>> a.send("testing")
-```
-
-### Developing without hardware
+- `scope` Leave this as the defualt (`Scope.All()`) to receive messages from everyone. Set to `Scope.Multicast()` to register that we want to get multicast messages from other devices . See Scopes explained for details
 
 
+## Scopes Explained
 
-### Developing without hardware
+**TLDR** - use `Publisher(port, scope=Scope.Multicast())` and `Subscriber(port, scope=Scope.Multicast())` to get messages to work between different devices
 
-Because this library expects you to be connected to the robot () network you won't be able to send messages between two programs on your computer without any other hardware connected. You can get around this by forcing your (unused) ethernet interface to get an ip on the rover network without anything being connected to it. On my computer you can do this using this command:
+The protocol underlying UDPComms - UDP has a number of differnt [options](https://en.wikipedia.org/wiki/Routing#Delivery_schemes) for how packets can be delivered. By default UDPComms sends messages only to processes on the same device (`Scope.Local()`). To send messages to other computers on the same network use `Scope.Multicast()`. This will default to using the multicast group `239.255.20.22`, but it can be changed by passing an argument. 
 
-`sudo ifconfig en1 10.0.0.52 netmask 255.255.255.0`
+Older versions of the library defulted to using a broadcast on the `10.0.0.X` subnet. However, now that the library is often used on differnt networks that is no longer the defualt. To emulate the old behvaiour use `Scope.Broadcast('10.0.0.255')`
 
-Note that the exact command depends which interface on your computer is unused and what ip you want. So only use this if you know what you are doing.
+Here are all the avalible options:
 
-If you have internet access a slightly cleaner way to do it is to setup [RemoteVPN](https://github.com/stanfordroboticsclub/RemoteVPN) on your development computer and simply connect to a development network (given if you are the only computer there)
+- `Scope.Local` - Messages meant for this device only 
+- `Scope.Multicast`- Messages meant for the specified multicast group
+- `Scope.Broadcast` - Messages meant for all devices on this subnet
+- `Scope.Unicast` - Publisher only argument that sends messages to a specific ip address only
+- `Scope.All` - Subscriber only that listens to packets from all (except for multicast) sources
 
 
+### Connecting to devices on different networks
+
+If you want to talk to devices aross the internet use [RemoteVPN](https://github.com/stanfordroboticsclub/RemoteVPN) to get them all on the same virtual network and you should be able to use `Scope.Multicast()` from there
 
 
 ## Installation
@@ -128,8 +119,6 @@ $cd UDPComms
 $git pull
 $sudo bash install.sh
 ```
-
-
 
 ## Extras
 

@@ -139,7 +139,7 @@ class Subscriber:
         if hasattr(socket, "SO_REUSEPORT"):
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
-        if self.scope.isBroadcast():
+        if self.scope.isBroadcast() or self.scope.isAll():
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
         if self.scope.isMulticast():
