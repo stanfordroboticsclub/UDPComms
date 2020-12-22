@@ -1,8 +1,6 @@
 # UDPComms
 
-This is a simple library to enable communication between different processes (potentially on different machines) over a network using UDP. It's goals a simplicity and easy of understanding. It can send messages to processes running on the same device or to proceses on other devices on the same network (configured using scopes).
-
-Currently it works in python 2 and 3 but it should be relatively simple to extend it to other languages such as C (to run on embeded devices) or Julia (to interface with faster solvers).
+This is a simple library to enable communication between different processes (potentially on different machines, see `scopes`) over a network using UDP. It's goals a simplicity and easy of understanding. Currently it works in python 2 and 3 but it should be relatively simple to extend it to other languages such as C (to run on embeded devices) or Julia (to interface with faster solvers).
 
 The library automatically determines the type of the message and trasmits it along with it, so the subscribers can decode it correctly. While faster to prototype with then systems with explicit type declaration (such as ROS) its easy to shoot yourself in the foot if types are mismatched between publisher and subscriber.
 
