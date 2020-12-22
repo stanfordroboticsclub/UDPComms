@@ -25,24 +25,25 @@ else:
 timeout = socket.timeout
 
 MAX_SIZE = 65507
+DEFAULT_MULTICAST = "239.255.20.22"
 
 ##TODO:
 # Test on ubuntu and debian
 # Documentation (targets, and security disclaimer)
 
 class Scope:
-    class Target(Enum):
+    class Mode(Enum):
         LOCALHOST = auto()
         BROADCAST = auto()
         MULTICAST = auto()
         UNICAST   = auto()
         ALL       = auto()
 
-    locals().update(Target.__members__)
+    locals().update(Mode.__members__)
 
-    def __init__(self, option, ip):
-        assert isinstance(option, self.Target)
-        self.option = option
+    def __init__(self, mode, ip):
+        assert isinstance(mode, self.Mode)
+        self.mode = mode
         self.ip     = ip
 
     @classmethod
@@ -52,7 +53,7 @@ class Scope:
     def Broadcast(cls, ip): return cls(cls.BROADCAST,ip)
 
     @classmethod
-    def Multicast(cls, ip): return cls(cls.MULTICAST,ip)
+    def Multicast(cls, ip=DEFAULT_MULTICAST): return cls(cls.MULTICAST,ip)
 
     @classmethod
     def Unicast(cls, ip):   return cls(cls.UNICAST,ip)
@@ -61,22 +62,25 @@ class Scope:
     def All(cls):           return cls(cls.ALL,"")
 
     def isPublishable(self):
-        return self.option in (self.LOCALHOST,
+        return self.mode in (self.LOCALHOST,
                                self.BROADCAST,
                                self.MULTICAST,
                                self.UNICAST)
 
     def isSubscribable(self):
-        return self.option in (self.LOCALHOST,
+        return self.mode in (self.LOCALHOST,
                                self.BROADCAST,
                                self.MULTICAST,
                                self.ALL)
 
-    def isBroadcast(self): return self.option is self.BROADCAST
-    def isMulticast(self): return self.option is self.MULTICAST
-    def isLocal(self):     return self.option is self.LOCALHOST
-    def isUnicast(self):   return self.option is self.UNICAST
-    def isAll(self):       return self.option is self.ALL
+    def isBroadcast(self): return self.mode is self.BROADCAST
+    def isMulticast(self): return self.mode is self.MULTICAST
+    def isLocal(self):     return self.mode is self.LOCALHOST
+    def isUnicast(self):   return self.mode is self.UNICAST
+    def isAll(self):       return self.mode is self.ALL
+
+    def __repr__(self):
+        return "Scope(Scope." + self.mode.name + ", '" + self.ip + "')"
 
 class Publisher:
     def __init__(self, port, scope = Scope.Local() ):
@@ -150,7 +154,7 @@ class Subscriber:
         If no message is received before timeout it raises a UDPComms.timeout exception"""
 
         try:
-            self.last_data, address = self.sock.recvfrom(self.max_size)
+            self.last_data, address = self.sock.recvfrom(MAX_SIZE)
         except BlockingIOError:
             raise socket.timeout("no messages in buffer and called with timeout = 0")
 
