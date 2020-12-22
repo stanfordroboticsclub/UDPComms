@@ -38,43 +38,45 @@ class Scope:
         UNICAST   = auto()
         ALL       = auto()
 
+    locals().update(Target.__members__)
+
     def __init__(self, option, ip):
-        assert isinstance(option, Target)
+        assert isinstance(option, self.Target)
         self.option = option
         self.ip     = ip
 
     @classmethod
-    def Local(cls):         return cls(Target.LOCALHOST, "127.0.0.1")
+    def Local(cls):         return cls(cls.LOCALHOST, "127.0.0.1")
 
     @classmethod
-    def Broadcast(cls, ip): return cls(Target.BROADCAST,ip)
+    def Broadcast(cls, ip): return cls(cls.BROADCAST,ip)
 
     @classmethod
-    def Multicast(cls, ip): return cls(Target.MULTICAST,ip)
+    def Multicast(cls, ip): return cls(cls.MULTICAST,ip)
 
     @classmethod
-    def Unicast(cls, ip):   return cls(Target.UNICAST,ip)
+    def Unicast(cls, ip):   return cls(cls.UNICAST,ip)
 
     @classmethod
-    def All(cls):           return cls(Target.ALL,"")
+    def All(cls):           return cls(cls.ALL,"")
 
     def isPublishable(self):
-        return self.option in (Target.LOCALHOST,
-                               Target.BROADCAS,
-                               Target.MULTICAST,
-                               Target.UNICAST)
+        return self.option in (self.LOCALHOST,
+                               self.BROADCAST,
+                               self.MULTICAST,
+                               self.UNICAST)
 
     def isSubscribable(self):
-        return self.option in (Target.LOCALHOST,
-                               Target.BROADCAST,
-                               Target.MULTICAST,
-                               Target.ALL)
+        return self.option in (self.LOCALHOST,
+                               self.BROADCAST,
+                               self.MULTICAST,
+                               self.ALL)
 
-    def isBroadcast(self): return self.option is Target.BROADCAST
-    def isMulticast(self): return self.option is Target.MULTICAST
-    def isLocal(self):     return self.option is Target.LOCALHOST
-    def isUnicast(self):   return self.option is Target.UNICAST
-    def isAll(self):       return self.option is Target.ALL
+    def isBroadcast(self): return self.option is self.BROADCAST
+    def isMulticast(self): return self.option is self.MULTICAST
+    def isLocal(self):     return self.option is self.LOCALHOST
+    def isUnicast(self):   return self.option is self.UNICAST
+    def isAll(self):       return self.option is self.ALL
 
 class Publisher:
     def __init__(self, port, scope = Scope.Local() ):
