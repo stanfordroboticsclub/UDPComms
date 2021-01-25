@@ -93,7 +93,7 @@ class MultiProcessTestCase(unittest.TestCase):
         self.return_path = Subscriber(8000, timeout = 5, scope = Scope.LOCAL )
 
         self.p = subprocess.Popen(mirror_server, shell=True, stderr = subprocess.DEVNULL)
-        time.sleep(1)
+        time.sleep(1)# gives enough time to initialize
 
     def tearDown(self):
         self.p.wait()
