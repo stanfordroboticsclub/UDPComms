@@ -76,7 +76,7 @@ class Publisher:
 
     def send(self, obj):
         """ Publish a message. The obj can be any nesting of standard python types """
-        msg = msgpack.dumps(obj, use_bin_type=False)
+        msg = msgpack.dumps(obj, use_bin_type= not USING_PYTHON_2)
         assert len(msg) < MAX_SIZE, "Encoded message too big!"
         self.sock.send(msg)
 
