@@ -26,86 +26,53 @@ timeout = socket.timeout
 
 MAX_SIZE = 65507
 DEFAULT_MULTICAST = "239.255.20.22"
+DEFAULT_BROADCAST = "10.0.0.255"
 
 ##TODO:
 # Test on ubuntu and debian
 # Documentation (targets, and security disclaimer)
 
-class Scope:
-    class Mode(Enum):
-        LOCALHOST = auto()
-        BROADCAST = auto()
-        MULTICAST = auto()
-        UNICAST   = auto()
-        ALL       = auto()
-
-    locals().update(Mode.__members__)
-
-    def __init__(self, mode, ip):
-        assert isinstance(mode, self.Mode)
-        self.mode = mode
-        self.ip     = ip
-
-    @classmethod
-    def Local(cls):         return cls(cls.LOCALHOST, "127.0.0.1")
-
-    @classmethod
-    def Broadcast(cls, ip): return cls(cls.BROADCAST,ip)
-
-    @classmethod
-    def Multicast(cls, ip=DEFAULT_MULTICAST): return cls(cls.MULTICAST,ip)
-
-    @classmethod
-    def Unicast(cls, ip):   return cls(cls.UNICAST,ip)
-
-    @classmethod
-    def All(cls):           return cls(cls.ALL,"")
-
-    def isPublishable(self):
-        return self.mode in (self.LOCALHOST,
-                               self.BROADCAST,
-                               self.MULTICAST,
-                               self.UNICAST)
-
-    def isSubscribable(self):
-        return self.mode in (self.LOCALHOST,
-                               self.BROADCAST,
-                               self.MULTICAST,
-                               self.ALL)
-
-    def isBroadcast(self): return self.mode is self.BROADCAST
-    def isMulticast(self): return self.mode is self.MULTICAST
-    def isLocal(self):     return self.mode is self.LOCALHOST
-    def isUnicast(self):   return self.mode is self.UNICAST
-    def isAll(self):       return self.mode is self.ALL
-
-    def __repr__(self):
-        return "Scope(Scope." + self.mode.name + ", '" + self.ip + "')"
+class Scope(Enum):
+    LOCAL = auto()
+    NETWORK = auto()
+    BROADCAST = auto()
 
 class Publisher:
-    def __init__(self, port, scope = Scope.Local() ):
+    MULTICAST_IP = DEFAULT_MULTICAST
+    BROADCAST_IP = DEFAULT_BROADCAST
+
+    def __init__(self, port, scope = Scope.LOCAL):
         """ Create a Publisher Object
 
         Arguments:
             port         -- the port to publish the messages on
             scope        -- the scope the messages will be sent to
         """
-        assert scope.isPublishable()
 
         self.sock  = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.scope = scope
         self.port  = port
 
-        if self.scope.isBroadcast():
+        if self.scope == Scope.BROADCAST:
+            ip = self.BROADCAST_IP
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-        if self.scope.isMulticast():
+        else:
+            ip = self.MULTICAST_IP
+            if self.scope == Scope.LOCAL:
+                ttl = 0
+            elif self.scope == Scope.NETWORK:
+                ttl = 1
+            else:
+                raise ValueError("Unknown Scope")
+
             self.sock.setsockopt(socket.IPPROTO_IP,
                                  socket.IP_MULTICAST_TTL,
-                                 struct.pack('b', 1))
+                                 struct.pack('b', ttl))
+
 
         self.sock.settimeout(0.2)
-        self.sock.connect((self.scope.ip, port))
+        self.sock.connect((ip, port))
 
     def send(self, obj):
         """ Publish a message. The obj can be any nesting of standard python types """
@@ -118,7 +85,10 @@ class Publisher:
 
 
 class Subscriber:
-    def __init__(self, port, timeout=0.2, scope = Scope.All() ):
+    MULTICAST_IP = DEFAULT_MULTICAST
+    BROADCAST_IP = DEFAULT_BROADCAST
+
+    def __init__(self, port, timeout=0.2, scope = Scope.LOCAL ):
         """ Create a Subscriber Object
 
         Arguments:
@@ -126,7 +96,6 @@ class Subscriber:
             timeout      -- how long to wait before a message is considered out of date
             scope        -- where to expect messages to come from
         """
-        assert scope.isSubscribable()
         self.scope = scope
         self.port = port
         self.timeout = timeout
@@ -139,15 +108,19 @@ class Subscriber:
         if hasattr(socket, "SO_REUSEPORT"):
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
-        if self.scope.isBroadcast() or self.scope.isAll():
+        if self.scope == Scope.BROADCAST:
+            ip = self.BROADCAST_IP
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-        if self.scope.isMulticast():
-            mreq = struct.pack("4sl", socket.inet_aton(self.scope.ip), socket.INADDR_ANY)
+        elif self.scope == Scope.LOCAL or self.scope == Scope.NETWORK:
+            ip = self.MULTICAST_IP
+            mreq = struct.pack("4sl", socket.inet_aton(ip), socket.INADDR_ANY)
             self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+        else:
+            raise ValueError("Unknown Scope")
 
         self.sock.settimeout(timeout)
-        self.sock.bind((scope.ip, port))
+        self.sock.bind((ip, port))
 
     def recv(self):
         """ Receive a single message from the socket buffer. It blocks for up to timeout seconds.
@@ -167,7 +140,7 @@ class Subscriber:
         try:
             self.sock.settimeout(0)
             while True:
-                self.last_data, address = self.sock.recvfrom(self.max_size)
+                self.last_data, address = self.sock.recvfrom(MAX_SIZE)
                 self.last_time = monotonic()
         except socket.error:
             pass
@@ -188,7 +161,7 @@ class Subscriber:
         try:
             self.sock.settimeout(0)
             while True:
-                self.last_data, address = self.sock.recvfrom(self.max_size)
+                self.last_data, address = self.sock.recvfrom(MAX_SIZE)
                 self.last_time = monotonic()
                 msg = msgpack.loads(self.last_data, raw=USING_PYTHON_2)
                 msg_bufer.append(msg)
