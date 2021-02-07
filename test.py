@@ -2,6 +2,7 @@
 from UDPComms import Publisher, Subscriber, Scope, timeout
 import time
 import subprocess
+import os
 
 import unittest
 
@@ -82,20 +83,28 @@ class SingleProcessNetworkTestCase(unittest.TestCase):
 class MultiProcessTestCase(unittest.TestCase):
 
     def setUp(self):
-        mirror_server = """(""" \
-        """echo "from UDPComms import *";""" \
-        """echo "incomming = Subscriber(8003, timeout=5, scope = Scope.NETWORK )";""" \
-        """echo "outgoing = Publisher(8000, scope = Scope.NETWORK )";""" \
-        """echo "while 1: outgoing.send(incomming.recv())";""" \
-        """) | python"""
+        mirror_server = b"""
+from UDPComms import *;
+import sys
+incomming = Subscriber(8003, timeout=10, scope = Scope.NETWORK );
+outgoing = Publisher(8000, scope = Scope.NETWORK );
+print("ready");
+sys.stdout.flush()
+while 1: outgoing.send(incomming.recv());
+
+"""
+
+        self.p = subprocess.Popen('python', stdin = subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        self.p.stdin.write(mirror_server)
+        self.p.stdin.close()
+        self.p.stdout.readline() #wait for program to be ready
 
         self.local_pub = Publisher(8003, scope = Scope.LOCAL )
         self.return_path = Subscriber(8000, timeout = 5, scope = Scope.LOCAL )
 
-        self.p = subprocess.Popen(mirror_server, shell=True, stderr = subprocess.DEVNULL)
-        time.sleep(1)# gives enough time to initialize
-
     def tearDown(self):
+        self.p.stdout.close()
+        self.p.terminate()
         self.p.wait()
 
     def test_simple(self):
