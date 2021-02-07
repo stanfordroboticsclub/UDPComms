@@ -110,17 +110,19 @@ class Subscriber:
 
         if self.scope == Scope.BROADCAST:
             ip = self.BROADCAST_IP
+            bind_ip = self.BROADCAST_IP
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
         elif self.scope == Scope.LOCAL or self.scope == Scope.NETWORK:
             ip = self.MULTICAST_IP
+            bind_ip = "0.0.0.0"
             mreq = struct.pack("4sl", socket.inet_aton(ip), socket.INADDR_ANY)
             self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         else:
             raise ValueError("Unknown Scope")
 
         self.sock.settimeout(timeout)
-        self.sock.bind((ip, port))
+        self.sock.bind((bind_ip, port))
 
     def recv(self):
         """ Receive a single message from the socket buffer. It blocks for up to timeout seconds.
