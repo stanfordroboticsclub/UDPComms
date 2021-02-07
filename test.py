@@ -94,7 +94,7 @@ while 1: outgoing.send(incomming.recv());
 
 """
 
-        self.p = subprocess.Popen('python', stdin = subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        self.p = subprocess.Popen('python3', stdin = subprocess.PIPE, stdout=subprocess.PIPE)
         self.p.stdin.write(mirror_server)
         self.p.stdin.close()
         self.p.stdout.readline() #wait for program to be ready
