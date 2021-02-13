@@ -1,10 +1,10 @@
 # UDPComms
 
-This is a simple library to enable communication between different processes (potentially on different machines, see `scopes`) over a network using UDP. It's goals a simplicity and easy of understanding. Currently it works in python 2 and 3 but it should be relatively simple to extend it to other languages such as C (to run on embeded devices) or Julia (to interface with faster solvers).
+This is a simple library to enable communication between different processes (potentially on different machines) over a network using UDP. It's goals a simplicity and easy of understanding. Currently it works in python 2 and 3 but it should be relatively simple to extend it to other languages such as C (to run on embeded devices) or Julia (to interface with faster solvers).
 
 The library automatically determines the type of the message and trasmits it along with it, so the subscribers can decode it correctly. While faster to prototype with then systems with explicit type declaration (such as ROS) its easy to shoot yourself in the foot if types are mismatched between publisher and subscriber.
 
-Note that this library doesn't provide any message security. Unless you are using `Scope.Local()` on both ends, not only can anyone on your network evesdrop on messages they can also spoof messages very easily.
+Note that this library doesn't provide any message security. Not only can anyone on your network evesdrop on messages they can also spoof messages very easily.
 
 ## Usage
 
@@ -70,7 +70,7 @@ Although UDPComms isn't ideal for commands that need to be processed in order (a
 ### Publisher Arguments 
 - `port`
 The port the messages will be sent on. I recommend keep track of your port numbers somewhere. It's possible that in the future UDPComms will have a system of naming (with a string) as opposed to numbering publishers. 
-- `scope` Leave this as the defualt (`Scope.Local()`) to send messages to only this computer. Set to `Scope.Multicast()` to send to others on the network. See Scopes explained for details
+- `scope` Leave this as the defualt (`Scope.LOCAL`) to send messages to only this computer. Set to `Scope.NETWORK` to send to others on the network. See Scopes explained for details
 
 ### Subscriber Arguments 
 
@@ -78,24 +78,23 @@ The port the messages will be sent on. I recommend keep track of your port numbe
 The port the subscriber will be listen on. 
 - `timeout`
 If the `recv()` method don't get a message in `timeout` seconds it throws a `UDPComms.timeout` exception
-- `scope` Leave this as the defualt (`Scope.All()`) to receive messages from everyone. Set to `Scope.Multicast()` to register that we want to get multicast messages from other devices . See Scopes explained for details
-
+- `scope` There is currently no difference in behaviour between `Scope.LOCAL` and `Scope.NETWORK` - both will receive any messages that get to the device. This is planned to change in the future and `Scope.LOCAL` will only receive local messages.
 
 ## Scopes Explained
 
-**TLDR** - use `Publisher(port, scope=Scope.Multicast())` and `Subscriber(port, scope=Scope.Multicast())` to get messages to work between different devices
+**TLDR** - use `Publisher(port, scope=Scope.NETWORK())` and `Subscriber(port, scope=Scope.NETWORK())` to get messages to work between different devices.
 
-The protocol underlying UDPComms - UDP has a number of differnt [options](https://en.wikipedia.org/wiki/Routing#Delivery_schemes) for how packets can be delivered. By default UDPComms sends messages only to processes on the same device (`Scope.Local()`). To send messages to other computers on the same network use `Scope.Multicast()`. This will default to using the multicast group `239.255.20.22`, but it can be changed by passing an argument. 
+The protocol underlying UDPComms - UDP has a number of differnt [options](https://en.wikipedia.org/wiki/Routing#Delivery_schemes) for how packets can be delivered. By default UDPComms sends messages only to processes on the same device (`Scope.LOCAL()`). Those are still sent over multicast however the `TTL` (time to live) field is set to 0 so they aren't passed to the network. To send messages to other computers on the same network use `Scope.NETWORK()`. This will default to using the multicast group `239.255.20.22`.
 
-Older versions of the library defulted to using a broadcast on the `10.0.0.X` subnet. However, now that the library is often used on differnt networks that is no longer the defualt. To emulate the old behvaiour use `Scope.Broadcast('10.0.0.255')`
+Older versions of the library defaulted to using a broadcast on the `10.0.0.X` subnet. However, now that the library is often used on differnt networks that is no longer the defualt. To emulate the old behvaiour for compatibility use `Scope.BROADCAST`.
+
+Both the multicast group and the broadcast subnet can be changed by overwriting the class varaibles `MULTICAST_IP` and `BROADCAST_IP` respectivly.
 
 Here are all the avalible options:
 
-- `Scope.Local` - Messages meant for this device only 
-- `Scope.Multicast`- Messages meant for the specified multicast group
-- `Scope.Broadcast` - Messages meant for all devices on this subnet
-- `Scope.Unicast` - Publisher only argument that sends messages to a specific ip address only
-- `Scope.All` - Subscriber only that listens to packets from all (except for multicast) sources
+- `Scope.LOCAL` - Messages meant for this device only 
+- `Scope.NETOWORK`- Messages meant for the specified multicast group
+- `Scope.BROADCAST ` - Messages meant for all devices on this subnet
 
 
 ### Connecting to devices on different networks
