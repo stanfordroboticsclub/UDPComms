@@ -1,12 +1,22 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+import pathlib
+from setuptools import setup
+
+# The directory containing this file
+HERE = pathlib.Path(__file__).parent
+
+# The text of the README file
+README = (HERE / "README.md").read_text()
 
 setup(name='UDPComms',
-      version='1.1dev',
+      version='2.1',
       py_modules=['UDPComms'],
       description='Simple library for sending messages over UDP',
+      long_description=README,
+      long_description_content_type="text/markdown",
       author='Michal Adamkiewicz',
       author_email='mikadam@stanford.edu',
       url='https://github.com/stanfordroboticsclub/UDP-Comms',
+      install_requires=["msgpack>=1.0.0"],
      )

@@ -6,6 +6,12 @@ The library automatically determines the type of the message and trasmits it alo
 
 Note that this library doesn't provide any message security. Not only can anyone on your network evesdrop on messages they can also spoof messages very easily.
 
+## Installation
+
+``` $pip3 install UDPComms ``` :)
+
+Note that if you have an old version of the library installed (before we setup installing via pip) you'll have to uninstll that version manually by removing it from the `site-packages` folder inside your distribution. See this [StackOverflow question](https://stackoverflow.com/questions/402359/how-do-you-uninstall-a-python-package-that-was-installed-using-distutils). Alternativly you could use [virtual environments](https://docs.python.org/3/library/venv.html) to avoid this.
+
 ## Usage
 
 ### To Send Messages
@@ -102,26 +108,11 @@ Here are all the avalible options:
 If you want to talk to devices aross the internet use [RemoteVPN](https://github.com/stanfordroboticsclub/RemoteVPN) to get them all on the same virtual network and you should be able to use `Scope.Multicast()` from there
 
 
-## Installation
-
-```
-$git clone https://github.com/stanfordroboticsclub/UDPComms.git
-$sudo bash UDPComms/install.sh
-```
-
-### To Update 
-
-```
-$cd UDPComms
-$git pull
-$sudo bash install.sh
-```
-
 ## Extras
 
 ### Rover
 
-The library also comes with the `rover` command that can be used to interact with the messages manually.
+This repo also comes with the `rover` command that can be used to interact with the messages manually. It doesn't get installed with pip but its here. It depends on the pexpect package you'll have to install manually
 
 | Command | Descripion |
 |---------|------------|
