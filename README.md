@@ -76,7 +76,7 @@ Although UDPComms isn't ideal for commands that need to be processed in order (a
 ### Publisher Arguments 
 - `port`
 The port the messages will be sent on. I recommend keep track of your port numbers somewhere. It's possible that in the future UDPComms will have a system of naming (with a string) as opposed to numbering publishers. 
-- `scope` Leave this as the defualt (`Scope.LOCAL`) to send messages to only this computer. Set to `Scope.NETWORK` to send to others on the network. See Scopes explained for details
+- `scope` `Scope.LOCAL` will only send messages to only this computer. `Scope.NETWORK` will to send to others on the network. See Scopes explained for details.
 
 ### Subscriber Arguments 
 
@@ -87,8 +87,6 @@ If the `recv()` method don't get a message in `timeout` seconds it throws a `UDP
 - `scope` There is currently no difference in behaviour between `Scope.LOCAL` and `Scope.NETWORK` - both will receive any messages that get to the device. This is planned to change in the future and `Scope.LOCAL` will only receive local messages.
 
 ## Scopes Explained
-
-**TLDR** - use `Publisher(port, scope=Scope.NETWORK())` and `Subscriber(port, scope=Scope.NETWORK())` to get messages to work between different devices.
 
 The protocol underlying UDPComms - UDP has a number of differnt [options](https://en.wikipedia.org/wiki/Routing#Delivery_schemes) for how packets can be delivered. By default UDPComms sends messages only to processes on the same device (`Scope.LOCAL()`). Those are still sent over multicast however the `TTL` (time to live) field is set to 0 so they aren't passed to the network. To send messages to other computers on the same network use `Scope.NETWORK()`. This will default to using the multicast group `239.255.20.22`.
 

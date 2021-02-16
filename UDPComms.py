@@ -41,7 +41,7 @@ class Publisher:
     MULTICAST_IP = DEFAULT_MULTICAST
     BROADCAST_IP = DEFAULT_BROADCAST
 
-    def __init__(self, port, scope = Scope.LOCAL):
+    def __init__(self, port, scope = Scope.NETWORK):
         """ Create a Publisher Object
 
         Arguments:
@@ -88,7 +88,7 @@ class Subscriber:
     MULTICAST_IP = DEFAULT_MULTICAST
     BROADCAST_IP = DEFAULT_BROADCAST
 
-    def __init__(self, port, timeout=0.2, scope = Scope.LOCAL ):
+    def __init__(self, port, timeout=0.2, scope = Scope.NETWORK ):
         """ Create a Subscriber Object
 
         Arguments:
