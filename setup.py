@@ -9,8 +9,10 @@ HERE = pathlib.Path(__file__).parent
 # The text of the README file
 README = (HERE / "README.md").read_text()
 
+exec(open(HERE / "version.py").read())
+
 setup(name='UDPComms',
-      version='2.1',
+      version=__version__,
       py_modules=['UDPComms'],
       description='Simple library for sending messages over UDP',
       long_description=README,
