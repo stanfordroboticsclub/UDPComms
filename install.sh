@@ -4,9 +4,6 @@
 FOLDER=$(python -c "import os; print(os.path.dirname(os.path.realpath('$0')))")
 cd $FOLDER
 
-yes | sudo pip3 install msgpack
-yes | sudo pip install msgpack
-
 # install in editable mode
 pip3 install -e .
 
