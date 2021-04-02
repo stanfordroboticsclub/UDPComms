@@ -45,27 +45,27 @@ def get_iface_info(target):
     ValueError("target needs to be valid interface name or interface ip")
 
 class Publisher:
-    MULTICAST_IP = DEFAULT_MULTICAST
-
-    def __init__(self, port, target = "127.0.0.1", use_multicast = True):
+    def __init__(self, port, target = "127.0.0.1", multicast_ip = DEFAULT_MULTICAST):
         """ Create a Publisher Object
 
         Arguments:
             port          -- the port to publish the messages on
             target        -- name or ip of interface to sent messages to
-            use_multicast -- use multicast transport instead of broadcast
+            multicast_ip  -- if specified the multicast group ip to send messages
+                             to. If None fallback to broadcast
         """
 
         self.iface = get_iface_info(target)
 
-        if self.iface['addr'] == "127.0.0.1" and not use_multicast:
-            raise ValueError("Broadcast not supported on lo0")
+        if self.iface['addr'] == "127.0.0.1" and multicast_ip is None:
+            raise ValueError("Broadcast not supported on loopback")
 
         self.sock  = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.port  = port
+        self.multicast_ip = multicast_ip
 
-        if use_multicast:
-            ip = self.MULTICAST_IP
+        if multicast_ip:
+            ip = multicast_ip
             ttl = 1 # local is restricted by interface so ttl can just be 1
 
             self.sock.setsockopt(socket.IPPROTO_IP,
@@ -94,19 +94,19 @@ class Publisher:
 
 
 class Subscriber:
-    MULTICAST_IP = DEFAULT_MULTICAST
-
-    def __init__(self, port, timeout=0.2, target = "127.0.0.1", use_multicast = True ):
+    def __init__(self, port, timeout=0.2, target = "all", multicast_ip = DEFAULT_MULTICAST ):
         """ Create a Subscriber Object
 
         Arguments:
             port          -- the port to listen to messages on
             timeout       -- how long to wait before a message is considered out of date
             target        -- the name or address of interface from which to recv messages
-            use_multicast -- use multicast transport instead of broadcast
+            multicast_ip  -- if specified the multicast group ip to send messages
+                             to. If None fallback to broadcast
         """
         self.port = port
         self.timeout = timeout
+        self.multicast_ip = multicast_ip
 
         self.last_data = None
         self.last_time = float('-inf')
@@ -117,16 +117,16 @@ class Subscriber:
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
         if target in ("", "all", "ALL", "0.0.0.0"):
-            if not use_multicast:
+            if multicast_ip is None:
                 raise ValueError("broadcast can't listen to all interfaces")
 
             self.iface = {'addr':"0.0.0.0"}
         else:
             self.iface = get_iface_info(target)
 
-        if use_multicast:
-            bind_ip = self.MULTICAST_IP
-            mreq = struct.pack("=4s4s", socket.inet_aton(self.MULTICAST_IP),
+        if multicast_ip:
+            bind_ip = multicast_ip
+            mreq = struct.pack("=4s4s", socket.inet_aton(multicast_ip),
                                         socket.inet_aton(self.iface['addr']))
             self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         else:

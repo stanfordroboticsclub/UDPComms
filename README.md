@@ -74,9 +74,10 @@ Although UDPComms isn't ideal for commands that need to be processed in order (a
 -
 
 ### Publisher Arguments 
-- `port`
+- `port`:
 The port the messages will be sent on. I recommend keep track of your port numbers somewhere. It's possible that in the future UDPComms will have a system of naming (with a string) as opposed to numbering publishers. 
-- `scope` `Scope.LOCAL` will only send messages to only this computer. `Scope.NETWORK` will to send to others on the network. See Scopes explained for details.
+- `target`: The name (`"lo0"`, `"en0"` etc) or ip address (`"127.0.0.1"`, `"10.0.0.23"` etc) of the [network interface](https://goinbigdata.com/demystifying-ifconfig-and-network-interfaces-in-linux/) to use for sending the messages. It defaults to the loopback interface (`"127.0.0.1"`) so keeping the messages only on the local computer.
+- `multicast_ip`: the multicast group ip to use. It defualts to ` "239.255.20.22"`. It can able be set to `None` for compatiblity with old versions of the library
 
 ### Subscriber Arguments 
 
@@ -84,31 +85,25 @@ The port the messages will be sent on. I recommend keep track of your port numbe
 The port the subscriber will be listen on. 
 - `timeout`
 If the `recv()` method don't get a message in `timeout` seconds it throws a `UDPComms.timeout` exception
-- `scope` There is currently no difference in behaviour between `Scope.LOCAL` and `Scope.NETWORK` - both will receive any messages that get to the device. This is planned to change in the future and `Scope.LOCAL` will only receive local messages.
+- `target`: The name (`"lo0"`, `"en0"` etc) or ip address (`"127.0.0.1"`, `"10.0.0.23"` etc) of the [network interface](https://goinbigdata.com/demystifying-ifconfig-and-network-interfaces-in-linux/) to use for listening for messages. It can also be set to `"0.0.0.0"` or `"all"` to listen on all interfaces (which is defualts to).
+- `multicast_ip`: the multicast group ip to use. It defualts to ` "239.255.20.22"`. It can able be set to `None` for compatiblity with old versions of the library
 
-## Scopes Explained
-
-The protocol underlying UDPComms - UDP has a number of differnt [options](https://en.wikipedia.org/wiki/Routing#Delivery_schemes) for how packets can be delivered. By default UDPComms sends messages only to processes on the same device (`Scope.LOCAL()`). Those are still sent over multicast however the `TTL` (time to live) field is set to 0 so they aren't passed to the network. To send messages to other computers on the same network use `Scope.NETWORK()`. This will default to using the multicast group `239.255.20.22`.
-
-Older versions of the library defaulted to using a broadcast on the `10.0.0.X` subnet. However, now that the library is often used on differnt networks that is no longer the defualt. To emulate the old behvaiour for compatibility use `Scope.BROADCAST`.
-
-Both the multicast group and the broadcast subnet can be changed by overwriting the class varaibles `MULTICAST_IP` and `BROADCAST_IP` respectivly.
-
-Here are all the avalible options:
-
-- `Scope.LOCAL` - Messages meant for this device only 
-- `Scope.NETOWORK`- Messages meant for the specified multicast group
-- `Scope.BROADCAST ` - Messages meant for all devices on this subnet
-
-
-### Connecting to devices on different networks
-
-If you want to talk to devices aross the internet use [RemoteVPN](https://github.com/stanfordroboticsclub/RemoteVPN) to get them all on the same virtual network and you should be able to use `Scope.Multicast()` from there
 
 
 ## Extras
 
-### Rover
+### Connecting to devices on different networks
+
+If you want to talk to devices aross the internet use [RemoteVPN](https://github.com/stanfordroboticsclub/RemoteVPN) to get them all on the same virtual network and then you can use the virtual network interface name as the `target` argument.
+
+### Behind the scenes
+
+The protocol underlying UDPComms - UDP has a number of differnt [options](https://en.wikipedia.org/wiki/Routing#Delivery_schemes) for how packets can be delivered. By default UDPComms will send packets using multicast to the loopback interface. 
+
+Older versions of the library defaulted to using a broadcast specifically on the `10.0.0.X` subnet. However, now that the library is often used on differnt networks that is no longer the defualt. To emulate the old behvaiour for compatibility set the `multicast_ip` to `None` to force broadcast transport, and `target` to the computers ip on the `10.0.0.X` subnet.
+
+
+### Rover Command
 
 This repo also comes with the `rover` command that can be used to interact with the messages manually. It doesn't get installed with pip but its here. It depends on the pexpect package you'll have to install manually
 
@@ -118,7 +113,6 @@ This repo also comes with the `rover` command that can be used to interact with 
 | `rover poke port rate` | send messages to `port` once every `rate` milliseconds. Type message in json format and press return |
 
 There are more commands used for starting and stoping services described in [this repo](https://github.com/stanfordroboticsclub/RPI-Setup/blob/master/README.md)
-
 
 
 ### Known issues:
