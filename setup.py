@@ -21,5 +21,5 @@ setup(name='UDPComms',
       license='MIT',
       url='https://github.com/stanfordroboticsclub/UDP-Comms',
       packages=['UDPComms'],
-      install_requires=["msgpack>=1.0.0"],
+      install_requires=["msgpack>=1.0.0", "netifaces>=0.10.9"],
      )
