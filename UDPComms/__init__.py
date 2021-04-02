@@ -1,7 +1,6 @@
-__all__ = ["Publisher", "Subscriber", "timeout", "Scope"]
+__all__ = ["Publisher", "Subscriber", "timeout"]
 
 from .UDPComms import Publisher
 from .UDPComms import Subscriber
 from .UDPComms import timeout
-from .UDPComms import Scope
 from .version import __version__

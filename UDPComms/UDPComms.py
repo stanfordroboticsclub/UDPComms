@@ -13,6 +13,7 @@ import struct
 from enum import Enum, auto
 
 import msgpack
+import netifaces
 
 from sys import version_info
 
@@ -26,49 +27,57 @@ timeout = socket.timeout
 
 MAX_SIZE = 65507
 DEFAULT_MULTICAST = "239.255.20.22"
-DEFAULT_BROADCAST = "10.0.0.255"
 
 ##TODO:
 # Test on ubuntu and debian
 # Documentation (targets, and security disclaimer)
 
-class Scope(Enum):
-    LOCAL = auto()
-    NETWORK = auto()
-    BROADCAST = auto()
+def get_iface_info(target):
+    if target in netifaces.interfaces():
+        return netifaces.ifaddresses(target)[netifaces.AF_INET][0]
+
+    else:
+        for iface in netifaces.interfaces():
+            for addr in netifaces.ifaddresses(iface)[socket.AF_INET]:
+                if target == addr['addr']:
+                    return addr
+
+    ValueError("target needs to be valid interface name or interface ip")
 
 class Publisher:
     MULTICAST_IP = DEFAULT_MULTICAST
-    BROADCAST_IP = DEFAULT_BROADCAST
 
-    def __init__(self, port, scope = Scope.NETWORK):
+    def __init__(self, port, target = "127.0.0.1", use_multicast = True):
         """ Create a Publisher Object
 
         Arguments:
-            port         -- the port to publish the messages on
-            scope        -- the scope the messages will be sent to
+            port          -- the port to publish the messages on
+            target        -- name or ip of interface to sent messages to
+            use_multicast -- use multicast transport instead of broadcast
         """
 
+        self.iface = get_iface_info(target)
+
+        if self.iface['addr'] == "127.0.0.1" and not use_multicast:
+            raise ValueError("Broadcast not supported on lo0")
+
         self.sock  = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.scope = scope
         self.port  = port
 
-        if self.scope == Scope.BROADCAST:
-            ip = self.BROADCAST_IP
-            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-        else:
+        if use_multicast:
             ip = self.MULTICAST_IP
-            if self.scope == Scope.LOCAL:
-                ttl = 0
-            elif self.scope == Scope.NETWORK:
-                ttl = 1
-            else:
-                raise ValueError("Unknown Scope")
+            ttl = 1 # local is restricted by interface so ttl can just be 1
 
             self.sock.setsockopt(socket.IPPROTO_IP,
                                  socket.IP_MULTICAST_TTL,
                                  struct.pack('b', ttl))
+
+            self.sock.setsockopt(socket.IPPROTO_IP,
+                                 socket.IP_MULTICAST_IF,
+                                 socket.inet_aton(self.iface['addr']));
+        else:
+            ip = self.iface['broadcast']
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
 
         self.sock.settimeout(0.2)
@@ -86,17 +95,16 @@ class Publisher:
 
 class Subscriber:
     MULTICAST_IP = DEFAULT_MULTICAST
-    BROADCAST_IP = DEFAULT_BROADCAST
 
-    def __init__(self, port, timeout=0.2, scope = Scope.NETWORK ):
+    def __init__(self, port, timeout=0.2, target = "127.0.0.1", use_multicast = True ):
         """ Create a Subscriber Object
 
         Arguments:
-            port         -- the port to listen to messages on
-            timeout      -- how long to wait before a message is considered out of date
-            scope        -- where to expect messages to come from
+            port          -- the port to listen to messages on
+            timeout       -- how long to wait before a message is considered out of date
+            target        -- the name or address of interface from which to recv messages
+            use_multicast -- use multicast transport instead of broadcast
         """
-        self.scope = scope
         self.port = port
         self.timeout = timeout
 
@@ -108,18 +116,22 @@ class Subscriber:
         if hasattr(socket, "SO_REUSEPORT"):
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
-        if self.scope == Scope.BROADCAST:
-            ip = self.BROADCAST_IP
-            bind_ip = self.BROADCAST_IP
-            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        if target in ("", "all", "ALL", "0.0.0.0"):
+            if not use_multicast:
+                raise ValueError("broadcast can't listen to all interfaces")
 
-        elif self.scope == Scope.LOCAL or self.scope == Scope.NETWORK:
-            ip = self.MULTICAST_IP
-            bind_ip = "0.0.0.0"
-            mreq = struct.pack("4sl", socket.inet_aton(ip), socket.INADDR_ANY)
+            self.iface = {'addr':"0.0.0.0"}
+        else:
+            self.iface = get_iface_info(target)
+
+        if use_multicast:
+            bind_ip = self.MULTICAST_IP
+            mreq = struct.pack("=4s4s", socket.inet_aton(self.MULTICAST_IP),
+                                        socket.inet_aton(self.iface['addr']))
             self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         else:
-            raise ValueError("Unknown Scope")
+            bind_ip = self.iface['broadcast'] #binding to interface address doesn't work
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
         self.sock.settimeout(timeout)
         self.sock.bind((bind_ip, port))
