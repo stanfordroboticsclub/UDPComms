@@ -38,7 +38,7 @@ def get_iface_info(target):
 
     else:
         for iface in netifaces.interfaces():
-            for addr in netifaces.ifaddresses(iface)[socket.AF_INET]:
+            for addr in netifaces.ifaddresses(iface).get(socket.AF_INET, ()):
                 if target == addr['addr']:
                     return addr
 
@@ -94,7 +94,7 @@ class Publisher:
 
 
 class Subscriber:
-    def __init__(self, port, timeout=0.2, target = "all", multicast_ip = DEFAULT_MULTICAST ):
+    def __init__(self, port, timeout=0.2, target = "127.0.0.1", multicast_ip = DEFAULT_MULTICAST ):
         """ Create a Subscriber Object
 
         Arguments:
@@ -104,6 +104,7 @@ class Subscriber:
             multicast_ip  -- if specified the multicast group ip to send messages
                              to. If None fallback to broadcast
         """
+        #TODO: target=all doesn't work. TODO: change target=all to defult
         self.port = port
         self.timeout = timeout
         self.multicast_ip = multicast_ip
@@ -125,7 +126,8 @@ class Subscriber:
             self.iface = get_iface_info(target)
 
         if multicast_ip:
-            bind_ip = multicast_ip
+            # bind_ip = multicast_ip
+            bind_ip = "0.0.0.0"
             mreq = struct.pack("=4s4s", socket.inet_aton(multicast_ip),
                                         socket.inet_aton(self.iface['addr']))
             self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
