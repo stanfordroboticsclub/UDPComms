@@ -1,10 +1,18 @@
 # UDPComms
 
-This is a simple library to enable communication between different processes (potentially on different machines) over a network using UDP. It's goals a simplicity and easy of understanding and reliability. It works for devices on the `10.0.0.X` subnet although this can easiliy be changed.
+This is a simple library to enable communication between different processes (potentially on different machines) over a network using UDP. It's goals a simplicity and easy of understanding. Currently it works in python 2 and 3 but it should be relatively simple to extend it to other languages such as C (to run on embeded devices) or Julia (to interface with faster solvers).
 
-Currently it works in python 2 and 3 but it should be relatively simple to extend it to other languages such as C (to run on embeded devices) or Julia (to interface with faster solvers).
+The library automatically determines the type of the message and trasmits it along with it, so the subscribers can decode it correctly. While faster to prototype with then systems with explicit type declaration (such as ROS) its easy to shoot yourself in the foot if types are mismatched between publisher and subscriber.
 
-This new verison of the library automatically determines the type of the message and trasmits it along with it, so the subscribers can decode it correctly. While faster to prototype with then systems with explicit type declaration (such as ROS) its easy to shoot yourself in the foot if types are mismatched between publisher and subscriber.
+Note that this library doesn't provide any message security. Not only can anyone on your network evesdrop on messages they can also spoof messages very easily.
+
+## Installation
+
+``` $pip3 install UDPComms ``` :)
+
+Note that if you have an old version of the library installed (before we setup installing via pip) you'll have to uninstll that version manually by removing it from the `site-packages` folder inside your distribution. See this [StackOverflow question](https://stackoverflow.com/questions/402359/how-do-you-uninstall-a-python-package-that-was-installed-using-distutils). Alternativly you could use [virtual environments](https://docs.python.org/3/library/venv.html) to avoid this.
+
+## Usage
 
 ### To Send Messages
 ```
@@ -15,8 +23,9 @@ This new verison of the library automatically determines the type of the message
 
 ### To Receive Messages
 
-#### recv Method
+**TLDR** - you probably want the `get()` method
 
+#### recv Method
 
 Note: before using the `Subsciber.recv()` method read about the `Subsciber.get()` and understand the difference between them. The `Subsciber.recv()` method will pull a message from the socket buffer and it won't necessary be the most recent message. If you are calling it too slowly and there is a lot of messages you will be getting old messages. The `Subsciber.recv()` can also block for up to `timeout` seconds messing up timing.
 
@@ -62,11 +71,13 @@ Although UDPComms isn't ideal for commands that need to be processed in order (a
 >>> for message in messages:
 >>>     print("got", message)
 ```
+-
 
 ### Publisher Arguments 
-- `port`
-The port the messages will be sent on. If you are part of Stanford Student Robotics make sure there isn't any port conflicts by checking the `UDP Ports` sheet of the [CS Comms System](https://docs.google.com/spreadsheets/d/1pqduUwYa1_sWiObJDrvCCz4Al3pl588ytE4u-Dwa6Pw/edit?usp=sharing) document. If you are not I recommend keep track of your port numbers somewhere. It's possible that in the future UDPComms will have a system of naming (with a string) as opposed to numbering publishers. 
-- `ip` By default UDPComms sends to the `10.0.0.X` subnet, but can be changed to a different ip using this argument. Set to localhost (`127.0.0.1`) for development on the same computer. 
+- `port`:
+The port the messages will be sent on. I recommend keep track of your port numbers somewhere. It's possible that in the future UDPComms will have a system of naming (with a string) as opposed to numbering publishers. 
+- `target`: The name (`"lo0"`, `"en0"` etc) or ip address (`"127.0.0.1"`, `"10.0.0.23"` etc) of the [network interface](https://goinbigdata.com/demystifying-ifconfig-and-network-interfaces-in-linux/) to use for sending the messages. It defaults to the loopback interface (`"127.0.0.1"`) so keeping the messages only on the local computer.
+- `multicast_ip`: the multicast group ip to use. It defualts to ` "239.255.20.22"`. It can able be set to `None` for compatiblity with old versions of the library
 
 ### Subscriber Arguments 
 
@@ -74,11 +85,27 @@ The port the messages will be sent on. If you are part of Stanford Student Robot
 The port the subscriber will be listen on. 
 - `timeout`
 If the `recv()` method don't get a message in `timeout` seconds it throws a `UDPComms.timeout` exception
+- `target`: The name (`"lo0"`, `"en0"` etc) or ip address (`"127.0.0.1"`, `"10.0.0.23"` etc) of the [network interface](https://goinbigdata.com/demystifying-ifconfig-and-network-interfaces-in-linux/) to use for listening for messages. It can also be set to `"0.0.0.0"` or `"all"` to listen on all interfaces (which is defualts to).
+- `multicast_ip`: the multicast group ip to use. It defualts to ` "239.255.20.22"`. It can able be set to `None` for compatiblity with old versions of the library
 
-### Rover
 
-The library also comes with the `rover` command that can be used to interact with the messages manually.
 
+## Extras
+
+### Connecting to devices on different networks
+
+If you want to talk to devices aross the internet use [RemoteVPN](https://github.com/stanfordroboticsclub/RemoteVPN) to get them all on the same virtual network and then you can use the virtual network interface name as the `target` argument.
+
+### Behind the scenes
+
+The protocol underlying UDPComms - UDP has a number of differnt [options](https://en.wikipedia.org/wiki/Routing#Delivery_schemes) for how packets can be delivered. By default UDPComms will send packets using multicast to the loopback interface. 
+
+Older versions of the library defaulted to using a broadcast specifically on the `10.0.0.X` subnet. However, now that the library is often used on differnt networks that is no longer the defualt. To emulate the old behvaiour for compatibility set the `multicast_ip` to `None` to force broadcast transport, and `target` to the computers ip on the `10.0.0.X` subnet.
+
+
+### Rover Command
+
+This repo also comes with the `rover` command that can be used to interact with the messages manually. It doesn't get installed with pip but its here. It depends on the pexpect package you'll have to install manually
 
 | Command | Descripion |
 |---------|------------|
@@ -87,30 +114,6 @@ The library also comes with the `rover` command that can be used to interact wit
 
 There are more commands used for starting and stoping services described in [this repo](https://github.com/stanfordroboticsclub/RPI-Setup/blob/master/README.md)
 
-### To Install 
-
-```
-$git clone https://github.com/stanfordroboticsclub/UDPComms.git
-$sudo bash UDPComms/install.sh
-```
-
-### To Update 
-
-```
-$cd UDPComms
-$git pull
-$sudo bash install.sh
-```
-
-### Developing without hardware
-
-Because this library expects you to be connected to the robot (`10.0.0.X`) network you won't be able to send messages between two programs on your computer without any other hardware connected. You can get around this by forcing your (unused) ethernet interface to get an ip on the rover network without anything being connected to it. On my computer you can do this using this command:
-
-`sudo ifconfig en1 10.0.0.52 netmask 255.255.255.0`
-
-Note that the exact command depends which interface on your computer is unused and what ip you want. So only use this if you know what you are doing.
-
-If you have internet access a slightly cleaner way to do it is to setup [RemoteVPN](https://github.com/stanfordroboticsclub/RemoteVPN) on your development computer and simply connect to a development network (given if you are the only computer there)
 
 ### Known issues:
 
